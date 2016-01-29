@@ -4,17 +4,15 @@ AStar32U4ButtonA buttonA;
 AStar32U4ButtonB buttonB;
 AStar32U4ButtonC buttonC;
 
-// Arbitrary LED identifiers
-int GREEN_LED = 12;
-int YELLOW_LED = 7;
-
 // Button State
 int stateButtonA = 0;
 int stateButtonC = 0;
 
 // LED Blink state
-int ledBlinkCounter = 0;
-int tmpCounter;
+int ledBlinkCounterGreen = 0;
+int tmpCounterGreen;
+int ledBlinkCounterYellow = 0;
+int tmpCounterYellow;
 unsigned long uptime;
 
 // LED on/off state
@@ -67,7 +65,7 @@ void updateGreenLEDState(int stateButtonA) {
       break;
 
     case 2:  // blink at 2hz
-      handleBlink(GREEN_LED);
+      handleGreenBlink();
       break;
 
     default:  // off
@@ -83,8 +81,8 @@ void updateYellowLEDState(int stateButtonC) {
       _ledYellow(1);
       break;
 
-    case 2:  // blink at 2hz
-      handleBlink(YELLOW_LED);
+    case 2:  // blink at .4hz
+      handleYellowBlink();
       break;
 
     default:  // off
@@ -92,27 +90,30 @@ void updateYellowLEDState(int stateButtonC) {
   }
 }
 
-void handleBlink(int ledIdentifier) {
+void handleGreenBlink() {
   uptime = millis();
-  tmpCounter = uptime / 250;
-  if (tmpCounter > ledBlinkCounter) {
-    ledBlinkCounter = tmpCounter;
+  tmpCounterGreen = uptime / 250;
+  if (tmpCounterGreen > ledBlinkCounterGreen) {
+    ledBlinkCounterGreen = tmpCounterGreen;
 
-    if (ledIdentifier == GREEN_LED) {
-      if (greenLEDState == 0) {
-        _ledGreen(1);
-      } else {
-        _ledGreen(0);
-      }
+    if (greenLEDState == 0) {
+      _ledGreen(1);
+    } else {
+      _ledGreen(0);
     }
+  }
+}
 
-    if (ledIdentifier == YELLOW_LED) {
-      Serial.println(yellowLEDState);
-      if (yellowLEDState == 0) {
-        _ledYellow(1);
-      } else {
-        _ledYellow(0);
-      }
+void handleYellowBlink() {
+  uptime = millis();
+  tmpCounterYellow = uptime / 1250;
+  if (tmpCounterYellow > ledBlinkCounterYellow) {
+    ledBlinkCounterYellow = tmpCounterYellow;
+
+    if (yellowLEDState == 0) {
+      _ledYellow(1);
+    } else {
+      _ledYellow(0);
     }
   }
 }
