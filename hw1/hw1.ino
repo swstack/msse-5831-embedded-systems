@@ -1,23 +1,35 @@
-/* This example demonstrates three different methods for
-detecting a button press and release.  It blinks the green
-user LED each time button A is pressed and released.
-
-Note: This demo uses the standard button pins on the A-Star
-32U4 Prime and A-Star 32U4 Robot Controller.  To avoid
-damage or improper operation, if you have shields or other
-electronics connected, make sure they do not use those pins
-in a conflicting way. */
-
 #include <AStar32U4.h>
 
-// These objects provide access to the A-Star's on-board
-// buttons.  We will only use buttonA.
 AStar32U4ButtonA buttonA;
 AStar32U4ButtonB buttonB;
 AStar32U4ButtonC buttonC;
 
+// Arbitrary LED identifiers
+int GREEN_LED = 12;
+int YELLOW_LED = 7;
+
+// Button State
 int stateButtonA = 0;
 int stateButtonC = 0;
+
+// LED Blink state
+int ledBlinkCounter = 0;
+int tmpCounter;
+unsigned long uptime;
+
+// LED on/off state
+int greenLEDState;
+int yellowLEDState;
+
+void _ledGreen(int state) {
+  greenLEDState = state;
+  ledGreen(state);
+}
+
+void _ledYellow(int state) {
+  yellowLEDState = state;
+  ledYellow(state);
+}
 
 void setup()
 {
@@ -47,38 +59,60 @@ void loop()
 }
 
 void updateGreenLEDState(int stateButtonA) {
-  Serial.println(stateButtonA);
+
   switch(stateButtonA) {
 
     case 1:  // solid on
-      ledGreen(1);
+      _ledGreen(1);
       break;
 
     case 2:  // blink at 2hz
-      ledGreen(1);
-      delay(200);
-      ledGreen(0);
+      handleBlink(GREEN_LED);
       break;
 
     default:  // off
-      ledGreen(0);
+      _ledGreen(0);
   }
 }
 
 void updateYellowLEDState(int stateButtonC) {
+
   switch(stateButtonC) {
 
     case 1:  // solid on
-      ledYellow(1);
+      _ledYellow(1);
       break;
 
     case 2:  // blink at 2hz
-      ledYellow(1);
-      delay(200);
-      ledYellow(0);
+      handleBlink(YELLOW_LED);
       break;
 
     default:  // off
-      ledYellow(0);
+      _ledYellow(0);
+  }
+}
+
+void handleBlink(int ledIdentifier) {
+  uptime = millis();
+  tmpCounter = uptime / 250;
+  if (tmpCounter > ledBlinkCounter) {
+    ledBlinkCounter = tmpCounter;
+
+    if (ledIdentifier == GREEN_LED) {
+      if (greenLEDState == 0) {
+        _ledGreen(1);
+      } else {
+        _ledGreen(0);
+      }
+    }
+
+    if (ledIdentifier == YELLOW_LED) {
+      Serial.println(yellowLEDState);
+      if (yellowLEDState == 0) {
+        _ledYellow(1);
+      } else {
+        _ledYellow(0);
+      }
+    }
   }
 }
