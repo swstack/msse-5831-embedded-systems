@@ -15,10 +15,13 @@ int ledBlinkCounterYellow = 0;
 int tmpCounterYellow;
 unsigned long uptime;
 
+// Use #defines or const to define states and improve readability. (ACL)
+
 // LED on/off state
 int greenLEDState;
 int yellowLEDState;
 
+// I think this grouping of state and behavior in one spot is a good thing. (ACL)
 void _ledGreen(int state) {
   greenLEDState = state;
   ledGreen(state);
@@ -36,6 +39,7 @@ void setup()
 
 void loop()
 {
+  // Can use mod to advance state without checking current. (ACL)
   if (buttonA.getSingleDebouncedRelease()) {
     if (stateButtonA < 2) {
       stateButtonA++;
@@ -104,6 +108,7 @@ void handleGreenBlink() {
   }
 }
 
+// A logically correct implementation with good control over timing, but difficult to follow. (ACL)
 void handleYellowBlink() {
   uptime = millis();
   tmpCounterYellow = uptime / 1250;
