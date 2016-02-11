@@ -25,11 +25,20 @@ led_state led_state_red = OFF;
 // ISRs
 ISR(TIMER3_COMPA_vect) {
   // Every 500hz
+  if (led_state_green == ON) {
+    green(OFF);
+  } else {
+    green(ON);
+  }
 }
 
 ISR(TIMER1_COMPA_vect) {
   // Every 1000hz
   ms_count++;
+
+  if (led_state_yellow == ON) {
+    yellow(OFF);
+  }
 }
 
 void initLEDs() {
@@ -43,15 +52,15 @@ void initLEDs() {
   DDRB |= (1 << DDB0);
 }
 
-void init500hzTimer() {
+void init1hzTimer() {
   // Setup CTC mode (Clear Timer Compare)
   TCCR3A = 0;  // Bits 0 and 1 to value 0
 
   // Setup prescaler value to 1024
-  TCCR3B = (1 << CS30) | (1 << CS31) | (1 << WGM32);
+  TCCR3B = (1 << CS30) | (1 << CS32) | (1 << WGM32);
 
   // Set TOP rollover to 15625
-  OCR3A = 500;
+  OCR3A = 15625;
 
   // Enable Output Compare A Match Interrupt
   TIMSK3 = (1 << OCIE3A);
@@ -77,6 +86,7 @@ void yellow(led_state state) {
   } else {
     PORTC &= ~(1 << PORTC7);  // Set low
   }
+  led_state_yellow = state;
 }
 
 void green(led_state state) {
@@ -85,6 +95,7 @@ void green(led_state state) {
   } else {
     PORTD |= (1 << PORTD5);  // Set high
   }
+  led_state_green = state;
 }
 
 void red(led_state state) {
@@ -93,23 +104,16 @@ void red(led_state state) {
   } else {
     PORTB |= (1 << PORTB0);  // Set high
   }
+  led_state_red = state;
 }
 
 int main() {
-  init500hzTimer();
+  init1hzTimer();
   init1000hzTimer();
   initLEDs();
   sei();
 
   while (1) {
-    red(ON);
-    green(ON);
-    yellow(ON);
-    _delay_ms(1000);
-    red(OFF);
-    green(OFF);
-    yellow(OFF);
-    _delay_ms(1000);
   }
 
   return 0;
