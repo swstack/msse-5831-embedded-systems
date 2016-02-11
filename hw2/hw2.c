@@ -11,6 +11,7 @@ Button B
 
 Button C
   Pin = PB0
+  Interrupt = PCINT0
 
 */
 
@@ -18,10 +19,6 @@ Button C
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
-
-// Button A = PB3 (PCMSK = PCINT3)
-// Button B = PD5
-// Button C = PB0
 
 int main() {
   // Configure buttons as input
@@ -49,6 +46,8 @@ int main() {
   {
 
   }
+
+  return 0;
 }
 
 void flashYellow() {
