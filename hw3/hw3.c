@@ -4,20 +4,20 @@
 #include <avr/interrupt.h>
 #include <stdbool.h>
 
-typedef enum {
-  OFF,
-  ON
-} led_state;
+typedef enum { OFF, ON } led_state;
 
 // Function prototypes
-void flashGreen();
-void flashYellow();
 void yellow(led_state);
 void red(led_state);
 void green(led_state);
+void toggleGreen();
+void toggleYellow();
+void toggleRed();
+int systemUptime();
+void resetUptime();
 
 // Global variables
-uint32_t ms_count = 0;
+uint32_t uptime_ms = 0;
 led_state led_state_green = OFF;
 led_state led_state_yellow = OFF;
 led_state led_state_red = OFF;
@@ -25,20 +25,12 @@ led_state led_state_red = OFF;
 // ISRs
 ISR(TIMER3_COMPA_vect) {
   // Every 500hz
-  if (led_state_green == ON) {
-    green(OFF);
-  } else {
-    green(ON);
-  }
+  toggleGreen();
 }
 
 ISR(TIMER1_COMPA_vect) {
   // Every 1000hz
-  ms_count++;
-
-  if (led_state_yellow == ON) {
-    yellow(OFF);
-  }
+  uptime_ms++;
 }
 
 void initLEDs() {
@@ -80,6 +72,30 @@ void init1000hzTimer() {
   TIMSK1 = (1 << OCIE1A);
 }
 
+void toggleYellow() {
+  if (led_state_yellow == ON) {
+    yellow(OFF);
+  } else {
+    yellow(ON);
+  }
+}
+
+void toggleGreen() {
+  if (led_state_green == ON) {
+    green(OFF);
+  } else {
+    green(ON);
+  }
+}
+
+void toggleRed() {
+  if (led_state_red == ON) {
+    red(OFF);
+  } else {
+    red(ON);
+  }
+}
+
 void yellow(led_state state) {
   if (state == ON) {
     PORTC |= (1 << PORTC7);  // Set high
@@ -107,6 +123,26 @@ void red(led_state state) {
   led_state_red = state;
 }
 
+int systemUptime() {
+  cli();
+  int cpy = uptime_ms;
+  sei();
+  return cpy;
+}
+
+void resetUptime() {
+  cli();
+  uptime_ms = 0;
+  sei();
+}
+
+void loop() {
+  if (systemUptime() == 250) {
+    toggleYellow();
+    resetUptime();
+  }
+}
+
 int main() {
   init1hzTimer();
   init1000hzTimer();
@@ -114,6 +150,7 @@ int main() {
   sei();
 
   while (1) {
+    loop();
   }
 
   return 0;
