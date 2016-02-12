@@ -18,9 +18,11 @@ void resetUptime();
 void initLEDs();
 void init1hzTimer();
 void init1000hzTimer();
+void initButtons();
 
 // Global variables
 uint32_t uptime_ms = 0;
+bool task_release_flag = false;
 led_state led_state_green = OFF;
 led_state led_state_yellow = OFF;
 led_state led_state_red = OFF;
@@ -32,6 +34,15 @@ led_state led_state_red = OFF;
 ISR(TIMER3_COMPA_vect) {
   // Every 500hz
   toggleGreen();
+
+  // Check Button A pressed
+  if ((PINB & (1 << PORTB3)) == 0) {
+    _delay_ms(200);
+    // Still pressed
+    if ((PINB & (1 << PORTB3)) == 0) {
+      task_release_flag = true;
+    }
+  }
 }
 
 ISR(TIMER1_COMPA_vect) {
@@ -39,12 +50,17 @@ ISR(TIMER1_COMPA_vect) {
   uptime_ms++;
 }
 
-void computationallyExpensiveTask() {}
+void computationallyExpensiveTask() { red(ON); }
 
 void loop() {
   if (systemUptime() == 250) {
     toggleYellow();
     resetUptime();
+  }
+
+  if (task_release_flag == true) {
+    computationallyExpensiveTask();
+    task_release_flag = false;
   }
 }
 
@@ -52,6 +68,7 @@ int main() {
   init1hzTimer();
   init1000hzTimer();
   initLEDs();
+  initButtons();
   sei();
 
   while (1) {
@@ -64,6 +81,13 @@ int main() {
 //*******************************************
 // Setup/Init Functions
 //*******************************************
+void initButtons() {
+  // Initialize Button A as input
+  DDRB &= ~(1 << DDB3);
+
+  // Enable Button A pull-up resistor
+  PORTB |= (1 << PORTB3);
+}
 
 void initLEDs() {
   // Configures yellow LED pin as output
@@ -107,7 +131,6 @@ void init1000hzTimer() {
 //*******************************************
 // Helper Functions
 //*******************************************
-
 void toggleYellow() {
   if (led_state_yellow == ON) {
     yellow(OFF);
