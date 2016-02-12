@@ -65,7 +65,7 @@ void computationallyExpensiveTask() {
 }
 
 void loop() {
-  if (systemUptime() == 250) {
+  if (systemUptime() >= 250) {
     toggleYellow();
     resetUptime();
   }
