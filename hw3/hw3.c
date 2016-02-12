@@ -15,6 +15,9 @@ void toggleYellow();
 void toggleRed();
 int systemUptime();
 void resetUptime();
+void initLEDs();
+void init1hzTimer();
+void init1000hzTimer();
 
 // Global variables
 uint32_t uptime_ms = 0;
@@ -22,7 +25,10 @@ led_state led_state_green = OFF;
 led_state led_state_yellow = OFF;
 led_state led_state_red = OFF;
 
-// ISRs
+//*******************************************
+// Core Program Logic
+//*******************************************
+
 ISR(TIMER3_COMPA_vect) {
   // Every 500hz
   toggleGreen();
@@ -32,6 +38,32 @@ ISR(TIMER1_COMPA_vect) {
   // Every 1000hz
   uptime_ms++;
 }
+
+void computationallyExpensiveTask() {}
+
+void loop() {
+  if (systemUptime() == 250) {
+    toggleYellow();
+    resetUptime();
+  }
+}
+
+int main() {
+  init1hzTimer();
+  init1000hzTimer();
+  initLEDs();
+  sei();
+
+  while (1) {
+    loop();
+  }
+
+  return 0;
+}
+
+//*******************************************
+// Setup/Init Functions
+//*******************************************
 
 void initLEDs() {
   // Configures yellow LED pin as output
@@ -71,6 +103,10 @@ void init1000hzTimer() {
   // Enable Output Compare A Match Interrupt
   TIMSK1 = (1 << OCIE1A);
 }
+
+//*******************************************
+// Helper Functions
+//*******************************************
 
 void toggleYellow() {
   if (led_state_yellow == ON) {
@@ -134,24 +170,4 @@ void resetUptime() {
   cli();
   uptime_ms = 0;
   sei();
-}
-
-void loop() {
-  if (systemUptime() == 250) {
-    toggleYellow();
-    resetUptime();
-  }
-}
-
-int main() {
-  init1hzTimer();
-  init1000hzTimer();
-  initLEDs();
-  sei();
-
-  while (1) {
-    loop();
-  }
-
-  return 0;
 }
