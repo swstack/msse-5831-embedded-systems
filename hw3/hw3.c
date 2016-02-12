@@ -19,6 +19,8 @@ void initLEDs();
 void init1hzTimer();
 void init1000hzTimer();
 void initButtons();
+void gpioRed(led_state);
+void gpioGreen(led_state);
 
 // Global variables
 uint32_t uptime_ms = 0;
@@ -50,7 +52,17 @@ ISR(TIMER1_COMPA_vect) {
   uptime_ms++;
 }
 
-void computationallyExpensiveTask() { red(ON); }
+void computationallyExpensiveTask() {
+  gpioRed(ON);
+  _delay_ms(300);
+  gpioRed(OFF);
+  gpioGreen(ON);
+  _delay_ms(500);
+  gpioGreen(OFF);
+  gpioRed(ON);
+  _delay_ms(400);
+  gpioRed(OFF);
+}
 
 void loop() {
   if (systemUptime() == 250) {
@@ -90,14 +102,14 @@ void initButtons() {
 }
 
 void initLEDs() {
-  // Configures yellow LED pin as output
-  DDRC |= (1 << DDC7);
+  // Configure on-board LED pins
+  DDRC |= (1 << DDC7);  // yellow
+  DDRD |= (1 << DDD5);  // green
+  DDRB |= (1 << DDB0);  // red
 
-  // Configures green LED as output
-  DDRD |= (1 << DDD5);
-
-  // configure red LED as output
-  DDRB |= (1 << DDB0);
+  // Configure GPIO header pins
+  DDRD |= (1 << DDD6);  // red
+  DDRB |= (1 << DDB6);  // green
 }
 
 void init1hzTimer() {
@@ -178,6 +190,24 @@ void red(led_state state) {
     PORTB &= ~(1 << PORTB0);  // Set low
   } else {
     PORTB |= (1 << PORTB0);  // Set high
+  }
+  led_state_red = state;
+}
+
+void gpioRed(led_state state) {
+  if (state == ON) {
+    PORTD |= (1 << PORTD6);  // Set high
+  } else {
+    PORTD &= ~(1 << PORTD6);  // Set low
+  }
+  led_state_red = state;
+}
+
+void gpioGreen(led_state state) {
+  if (state == ON) {
+    PORTB |= (1 << PORTB6);  // Set high
+  } else {
+    PORTB &= ~(1 << PORTB6);  // Set low
   }
   led_state_red = state;
 }
