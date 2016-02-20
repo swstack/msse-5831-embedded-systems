@@ -1,11 +1,10 @@
 PORT=/dev/tty.usb*
 MCU=atmega32u4
-INCLUDES=../VirtualSerial/
-CFLAGS=-g -Wall -mcall-prologues -mmcu=$(MCU) -Os -std=c99 -I$(INCLUDES)
-LDFLAGS=-Wl,-gc-sections -Wl,-relax -L$(INCLUDES) -lVirtualSerial
+CFLAGS=-g -Wall -mcall-prologues -mmcu=$(MCU) -Os -std=c99 -I../VirtualSerial/ -I../common/
+LDFLAGS=-Wl,-gc-sections -Wl,-relax -L../VirtualSerial/ -lVirtualSerial
 CC=avr-gcc
 TARGET=lab1
-OBJECT_FILES=lab1.o
+OBJECT_FILES=lab1.o ../common/common.o
 
 all: $(TARGET).hex
 
