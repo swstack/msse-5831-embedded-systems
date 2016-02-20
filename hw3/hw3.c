@@ -4,6 +4,10 @@
 #include <avr/interrupt.h>
 #include <stdbool.h>
 
+#define LOOP_COUNT_1MS  2000
+#define BusyWait_1ms { for ( uint32_t  __i = 0; __i < LOOP_COUNT_1MS; __i++ ) \
+{ __asm__ __volatile__ (“nop”); } }
+
 typedef enum { OFF, ON } led_state;
 
 // Function prototypes
@@ -143,6 +147,7 @@ void init1000hzTimer() {
 //*******************************************
 // Helper Functions
 //*******************************************
+
 void toggleYellow() {
   if (led_state_yellow == ON) {
     yellow(OFF);
