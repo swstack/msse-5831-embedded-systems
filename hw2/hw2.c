@@ -20,6 +20,11 @@ Button C
 #include <util/delay.h>
 #include <avr/interrupt.h>
 
+// Does not meet functional requirements:
+// - need to be toggling LED in main loop.
+// - LED should toggle 10 times on release only (not press) using a for-loop delay
+// Think about building generic functions, structs, #defines for clear/set/read ACL
+
 int main() {
   // Configure buttons as input
   // Note: "&= ~" is an idiomatic way to put the bit to 0
@@ -27,14 +32,14 @@ int main() {
   DDRB &= ~(1 << DDB0);  // Button C
 
   // Enable Button A pull-up resistor
-  PORTB |= (1 << PORTB3);
+  PORTB |= (1 << PORTB3);  // need to enable for Button C too. ACL
 
   // Pin Change Interrupt Control Register = 1
   // Any change on any enabled PCING7..0 will can an interrupt.
   PCICR = 1;
 
   // Enable interrupts on Button A (PCINT3) and Button C (PCINT0)
-  PCMSK0 = 0b00001000;
+  PCMSK0 = 0b00001000;  // hard-coded bits prone to typos. Did not enable button C. ACL 
 
   // Configures yellow LED pin as output
   DDRC |= (1 << DDC7);
