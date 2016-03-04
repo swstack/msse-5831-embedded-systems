@@ -7,6 +7,11 @@ led_state led_state_green = OFF;
 led_state led_state_yellow = OFF;
 led_state led_state_red = OFF;
 
+ISR(TIMER1_COMPA_vect) {
+  // Every 1000hz
+  uptime_ms++;
+}
+
 void initButtons() {
   // Initialize Button A as input
   DDRB &= ~(1 << DDB3);

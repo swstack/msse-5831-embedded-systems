@@ -8,23 +8,17 @@
 #include <stdio.h>
 #include <string.h>
 
-
-void init()
-{
-    SetupHardware();
-    sei();
+void init() {
+  SetupHardware();
+  init1000hzTimer();
+  sei();
 }
 
-int main()
-{
-    init();
-    uint8_t value = 0xFF;
+int main() {
+  init();
 
-    while (1)
-    {
-        USB_Mainloop_Handler();
-
-        printf("[%p] %x\r\n", &value, value--);
-        _delay_ms(500);
-    }
+  while (1)
+  {
+    USB_Mainloop_Handler();
+  }
 }
