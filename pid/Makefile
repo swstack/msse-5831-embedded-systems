@@ -19,3 +19,6 @@ clean:
 
 program: $(TARGET).hex
 	avrdude -p $(MCU) -c avr109 -P $(PORT) -U flash:w:$(TARGET).hex
+
+program_example: motorExample.hex
+	avrdude -p $(MCU) -c avr109 -P $(PORT) -U flash:w:motorExample.hex
