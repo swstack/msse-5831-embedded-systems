@@ -12,7 +12,7 @@ ISR(TIMER1_COMPA_vect) {
   uptime_ms++;
 }
 
-void initButtons() {
+void initInputButtons() {
   // Initialize Button A as input
   DDRB &= ~(1 << DDB3);
 
