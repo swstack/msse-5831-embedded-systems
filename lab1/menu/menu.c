@@ -81,7 +81,6 @@ void processCommand() {
 }
 
 void handleMenu() {
-  USB_Mainloop_Handler();
   int c = fgetc(stdin);
   if (c == -1) {
     // Not sure why, but when no serial data is sent, the value is 0xFF

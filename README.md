@@ -2,6 +2,19 @@
 
 Class assignments for SENG-5831 (Embedded Systems) at the University of Minnesota.
 
+# Pins
+
+Button A
+  Pin = PB3
+  Interrupt = PCINT3
+
+Button B
+  Pin = PD5
+
+Button C
+  Pin = PB0
+  Interrupt = PCINT0
+
 # HW 1
 
 Push buttons to modify LED functionality.

@@ -17,7 +17,12 @@ void initInputButtons() {
   DDRB &= ~(1 << DDB3);
 
   // Enable Button A pull-up resistor
-  PORTB |= (1 << PORTB3);
+  PORTB |= (1 << PB0) | (1 << PB3);
+
+  // Pin Change Interrupt Control Register = 1
+  // Any change on any enabled PCINT7..0 will can an interrupt.
+  PCICR = 1;
+  PCMSK0 = (1 << PCINT3) | (1 << PCINT0);
 }
 
 void initLEDs() {
