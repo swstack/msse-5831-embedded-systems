@@ -1,3 +1,13 @@
+/*
+Behavior mostly good. Intent was to interleave computationally intensive task with toggling. Polling for 
+button press a little too slow (missing presses).
+Code is looking "generalized" - that's good - but start using more inline and/or #define for efficiency.
+More structs for generalization.
+Minor point: freq = 16M/(N*(OCRn-1), thus OCR=249, not 250.
+Easy to follow code. Organization pretty good. ACL
+*/
+
+
 #define F_CPU 16000000
 #include <avr/io.h>
 #include <util/delay.h>
