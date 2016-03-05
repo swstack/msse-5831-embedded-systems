@@ -21,9 +21,6 @@ int main() {
 
   while (1)
   {
-
-    USB_Mainloop_Handler();
     handleMenu();
-    _delay_ms(100);
   }
 }

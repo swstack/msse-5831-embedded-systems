@@ -14,39 +14,46 @@ uint8_t buf[10];
 uint8_t bufIndex = 0;
 
 void doPrint() {
-  printf("Running command: Print");
+  printf("Running command: Print\r\n");
 }
 
 void doConfigExperiment(int experimentNumber) {
   if (experimentNumber == -1) {return;}
-  printf("Running command: Config Experiment");
+  printf("Running command: Config Experiment (%i)\r\n", experimentNumber);
 }
 
 void doConfigGreenLED(int toggleRate) {
   if (toggleRate == -1) {return;}
-  printf("Running command: Config Green LED");
+  printf("Running command: Config Green LED (%i)\r\n", toggleRate);
 }
 
 void doReset() {
-  printf("Running command: Reset");
+  printf("Running command: Reset\r\n");
 }
 
 void doRunExperiment() {
-  printf("Running command: Run Experiment");
+  printf("Running command: Run Experiment\r\n");
 }
 
 int parseIntArg() {
+  if (bufIndex <= 1) {
+    printf("Command (%c) requires an argument!\r\n", buf[0]);
+    return -1;
+  }
+
   if (buf[1] != ' ') {
+    printf("Please use a space between command and argument!\r\n");
     return -1;  // Needs to be a space
   }
 
   char argBuf[bufIndex - 2];
+  int argBufIndex = 0;
   for (int i = 2; i <= bufIndex; i++) {
-    argBuf[i] = (char)buf[i];
+    argBuf[argBufIndex] = (char)buf[i];
+    argBufIndex++;
   }
 
   int arg = atoi(argBuf);
-  // sscanf(argBuf, "%d", &arg);
   return arg;
 }
 
@@ -74,6 +81,7 @@ void processCommand() {
 }
 
 void handleMenu() {
+  USB_Mainloop_Handler();
   int c = fgetc(stdin);
   if (c == -1) {
     // Not sure why, but when no serial data is sent, the value is 0xFF
