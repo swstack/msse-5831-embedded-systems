@@ -3,6 +3,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <common.h>
+#include <menu.h>
 #include <util/delay.h>
 #include <VirtualSerial.h>
 #include <stdio.h>
@@ -11,6 +12,7 @@
 void init() {
   SetupHardware();
   init1000hzTimer();
+  initLEDs();
   sei();
 }
 
@@ -19,6 +21,9 @@ int main() {
 
   while (1)
   {
+
     USB_Mainloop_Handler();
+    handleMenu();
+    _delay_ms(100);
   }
 }
