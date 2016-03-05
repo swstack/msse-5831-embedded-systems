@@ -81,7 +81,9 @@ void handleMenu() {
   }
 
   if (c == '\r') {
-    processCommand();
+    if (bufIndex > 0) {
+      processCommand();
+    }
   } else {
     buf[bufIndex] = c;
     bufIndex++;
