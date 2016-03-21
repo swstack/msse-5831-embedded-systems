@@ -3,7 +3,7 @@ typedef enum { OFF, ON } led_state;
 /*
     Init Functions
 */
-void initLEDs();
+void initOnBoardsLEDs();
 void init1hzTimer();
 void init1000hzTimer();
 void initInputButtons();

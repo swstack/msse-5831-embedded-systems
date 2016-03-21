@@ -25,15 +25,11 @@ void initInputButtons() {
   PCMSK0 = (1 << PCINT3) | (1 << PCINT0);
 }
 
-void initLEDs() {
+void initOnBoardLEDs() {
   // Configure on-board LED pins
   DDRC |= (1 << DDC7);  // yellow
   DDRD |= (1 << DDD5);  // green
   DDRB |= (1 << DDB0);  // red
-
-  // Configure GPIO header pins
-  DDRD |= (1 << DDD6);  // red
-  DDRB |= (1 << DDB6);  // green
 }
 
 void init1hzTimer() {
@@ -132,6 +128,7 @@ void gpioGreen(led_state state) {
   }
   led_state_red = state;
 }
+
 
 int systemUptime() {
   cli();
