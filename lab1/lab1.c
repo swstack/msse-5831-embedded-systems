@@ -11,7 +11,7 @@
 #include <stdbool.h>
 
 /*
-  Flags
+  Flags and Globals
 */
 bool menuRelease = false;
 
@@ -50,7 +50,7 @@ void initGreenLedTask() {
 
 void init() {
   SetupHardware();
-  init1000hzTimer();
+  // init1000hzTimer();
   initOnBoardLEDs();
   initGreenLedTask();
   initInputButtons();
@@ -62,7 +62,7 @@ int main() {
 
   while (1) {
     USB_Mainloop_Handler();
-
+    
     if (menuRelease == true) {
       handleMenu();
     } else {
