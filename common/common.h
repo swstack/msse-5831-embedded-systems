@@ -27,3 +27,4 @@ void gpioGreen(led_state);
 */
 int systemUptime();
 void resetUptime();
+uint32_t uptime_ms;
