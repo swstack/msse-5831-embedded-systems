@@ -48,16 +48,16 @@ void init1hzTimer() {
 
 void init1000hzTimer() {
   // Setup CTC mode (Clear Timer Compare)
-  TCCR1A = 0;  // Bits 0 and 1 to value 0
+  TCCR3A = 0;  // Bits 0 and 1 to value 0
 
   // Setup prescaler value to 64
-  TCCR1B = (1 << CS10) | (1 << CS11) | (1 << WGM12);
+  TCCR3B = (1 << CS30) | (1 << CS31) | (1 << WGM32);
 
   // Set TOP rollover to 250
-  OCR1A = 250;
+  OCR3A = 250;
 
   // Enable Output Compare A Match Interrupt
-  TIMSK1 = (1 << OCIE1A);
+  TIMSK3 = (1 << OCIE3A);
 }
 
 void toggleYellow() {
