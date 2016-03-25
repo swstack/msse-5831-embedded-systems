@@ -28,3 +28,5 @@ From your laptop:
 ```
 screen /dev/tty.usb*
 ```
+
+Note: to quite the screen session push `ctrl + a + \`
