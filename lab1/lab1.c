@@ -22,6 +22,7 @@ ISR(PCINT0_vect) {
   uint8_t pinVal = PINB & _BV(PB3);
   if (pinVal != 0) {
     // button release
+    // TOOD: Xor by itself
     if (menuRelease == false) {
       menuRelease = true;
     } else {
@@ -33,14 +34,16 @@ ISR(PCINT0_vect) {
 /*
   Helpers
 */
-void handleGreenLedTask() {
-//
+
+void print_uptime() {
+  printf("%lu\r\n", uptime_ms);
 }
 
 /*
   Main and Inits
 */
 void initGreenLedTask() {
+  // Uses timer 1
   DDRB |= (1 << DDB6);
   TCCR1A |= (1 << COM1B1) | (1 << WGM11);
   TCCR1B |= (1 << WGM13) | (1 << CS12) | (1 << CS10);
@@ -50,7 +53,7 @@ void initGreenLedTask() {
 
 void init() {
   SetupHardware();
-  // init1000hzTimer();
+  init1000hzTimer0();
   initOnBoardLEDs();
   initGreenLedTask();
   initInputButtons();
@@ -62,7 +65,7 @@ int main() {
 
   while (1) {
     USB_Mainloop_Handler();
-    
+
     if (menuRelease == true) {
       handleMenu();
     } else {

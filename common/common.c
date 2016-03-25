@@ -7,7 +7,7 @@ led_state led_state_green = OFF;
 led_state led_state_yellow = OFF;
 led_state led_state_red = OFF;
 
-ISR(TIMER1_COMPA_vect) {
+ISR(TIMER0_COMPA_vect) {
   // Every 1000hz
   uptime_ms++;
 }
@@ -32,7 +32,7 @@ void initOnBoardLEDs() {
   DDRB |= (1 << DDB0);  // red
 }
 
-void init1hzTimer() {
+void init1hzTimer3() {
   // Setup CTC mode (Clear Timer Compare)
   TCCR3A = 0;  // Bits 0 and 1 to value 0
 
@@ -46,7 +46,7 @@ void init1hzTimer() {
   TIMSK3 = (1 << OCIE3A);
 }
 
-void init1000hzTimer() {
+void init1000hzTimer3() {
   // Setup CTC mode (Clear Timer Compare)
   TCCR3A = 0;  // Bits 0 and 1 to value 0
 
@@ -58,6 +58,20 @@ void init1000hzTimer() {
 
   // Enable Output Compare A Match Interrupt
   TIMSK3 = (1 << OCIE3A);
+}
+
+void init1000hzTimer0() {
+  // Setup CTC mode (Clear Timer Compare)
+  TCCR0A = 0;  // Bits 0 and 1 to value 0
+
+  // Setup prescaler value to 64
+  TCCR0B = (1 << CS00) | (1 << CS01) | (1 << WGM02);
+
+  // Set TOP rollover to 250
+  OCR0A = 250;
+
+  // Enable Output Compare A Match Interrupt
+  TIMSK0 = (1 << OCIE0A);
 }
 
 void toggleYellow() {
