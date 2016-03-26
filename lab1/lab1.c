@@ -11,6 +11,14 @@
 #include <stdbool.h>
 
 /*
+  Function prototypes
+*/
+void reset_state();
+void print_uptime();
+void handle_task_yellow_led();
+void handle_task_red_led();
+
+/*
   Flags and Globals
 */
 bool menu_release = false;
@@ -33,6 +41,11 @@ ISR(PCINT0_vect) {
   }
 }
 
+ISR(TIMER3_COMPA_vect) {
+  // Every 40hz
+  handle_task_yellow_led();
+}
+
 /*
   Helpers
 */
@@ -47,6 +60,15 @@ void print_uptime() {
 
 void setup_serial() {
   SetupHardware();
+}
+
+void handle_task_yellow_led() {
+  uint8_t yelval = PIND & _BV(PD6);
+  if (yelval == 0) {
+    PORTD |= (1 << PORTD6);  // Turn on
+  } else {
+    PORTD &= ~(1 << PORTD6); // Turn off
+  }
 }
 
 void handle_task_red_led() {
@@ -75,6 +97,7 @@ void init_task_green_led() {
 }
 
 void init_task_yellow_led() {
+  DDRD |= (1 << DDD6);
   TCCR3A = 0x00;
   TCCR3B = (1 << WGM32) | (1 << CS31) | (1 << CS30);
   OCR3A = 6250;
@@ -96,6 +119,7 @@ void init_all_tasks() {
   init_1000hz_timer_0();
   init_task_green_led();
   init_task_red_led();
+  init_task_yellow_led();
   init_input_buttons();
   sei();
 }

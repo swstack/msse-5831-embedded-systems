@@ -26,7 +26,7 @@ void init_input_buttons() {
 }
 
 void init_on_board_leds() {
-  // Configure on-board LED pins
+  // Configure on-board LED pins to output
   DDRC |= (1 << DDC7);  // yellow
   DDRD |= (1 << DDD5);  // green
   DDRB |= (1 << DDB0);  // red
