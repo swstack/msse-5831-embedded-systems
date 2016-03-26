@@ -80,6 +80,16 @@ void processCommand() {
   bufIndex = 0;
 }
 
+void printUsage() {
+  char *usage = "Menu Options:\r\n"
+                "p  : Print data collected for experiment, including job releases and missed deadlines.\r\n"
+                "e #: Set-Up this experiment number (e.g. Set flags to activate/deactivate delays in ISRs).\r\n"
+                "r #: Set the toggle period of the GREEN LED Task to # ms.\r\n"
+                "z  : Reset all variables to set up for a new experiment.\r\n"
+                "g  : Go signal for start experiment.\r\n";
+  printf(usage);
+}
+
 void handleMenu() {
   int c = fgetc(stdin);
   if (c == -1) {
