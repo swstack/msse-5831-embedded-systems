@@ -17,14 +17,14 @@ void green(led_state);
 void toggleGreen();
 void toggleYellow();
 void toggleRed();
-int systemUptime();
-void resetUptime();
+int system_uptime();
+void reset_uptime();
 void initLEDs();
 void init1hzTimer();
 void init1000hzTimer();
 void initButtons();
-void gpioRed(led_state);
-void gpioGreen(led_state);
+void gpio_red(led_state);
+void gpio_green(led_state);
 
 // Global variables
 uint32_t uptime_ms = 0;
@@ -57,21 +57,21 @@ ISR(TIMER1_COMPA_vect) {
 }
 
 void computationallyExpensiveTask() {
-  gpioRed(ON);
+  gpio_red(ON);
   _delay_ms(300);
-  gpioRed(OFF);
-  gpioGreen(ON);
+  gpio_red(OFF);
+  gpio_green(ON);
   _delay_ms(500);
-  gpioGreen(OFF);
-  gpioRed(ON);
+  gpio_green(OFF);
+  gpio_red(ON);
   _delay_ms(400);
-  gpioRed(OFF);
+  gpio_red(OFF);
 }
 
 void loop() {
-  if (systemUptime() >= 250) {
+  if (system_uptime() >= 250) {
     toggleYellow();
-    resetUptime();
+    reset_uptime();
   }
 
   if (task_release_flag == true) {
@@ -199,7 +199,7 @@ void red(led_state state) {
   led_state_red = state;
 }
 
-void gpioRed(led_state state) {
+void gpio_red(led_state state) {
   if (state == ON) {
     PORTD |= (1 << PORTD6);  // Set high
   } else {
@@ -208,7 +208,7 @@ void gpioRed(led_state state) {
   led_state_red = state;
 }
 
-void gpioGreen(led_state state) {
+void gpio_green(led_state state) {
   if (state == ON) {
     PORTB |= (1 << PORTB6);  // Set high
   } else {
@@ -217,14 +217,14 @@ void gpioGreen(led_state state) {
   led_state_red = state;
 }
 
-int systemUptime() {
+int system_uptime() {
   cli();
   int cpy = uptime_ms;
   sei();
   return cpy;
 }
 
-void resetUptime() {
+void reset_uptime() {
   cli();
   uptime_ms = 0;
   sei();

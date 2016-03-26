@@ -11,32 +11,32 @@
 #define COMMAND_RUN_EXPERIMENT 'g'
 
 uint8_t buf[10];
-uint8_t bufIndex = 0;
+uint8_t buf_index = 0;
 
-void doPrint() {
+void do_print() {
   printf("Running command: Print\r\n");
 }
 
-void doConfigExperiment(int experimentNumber) {
+void do_config_experiment(int experimentNumber) {
   if (experimentNumber == -1) {return;}
   printf("Running command: Config Experiment (%i)\r\n", experimentNumber);
 }
 
-void doConfigGreenLED(int toggleRate) {
+void do_config_green_led(int toggleRate) {
   if (toggleRate == -1) {return;}
   printf("Running command: Config Green LED (%i)\r\n", toggleRate);
 }
 
-void doReset() {
+void do_reset() {
   printf("Running command: Reset\r\n");
 }
 
-void doRunExperiment() {
+void do_run_experiment() {
   printf("Running command: Run Experiment\r\n");
 }
 
-int parseIntArg() {
-  if (bufIndex <= 1) {
+int parse_int_arg() {
+  if (buf_index <= 1) {
     printf("Command (%c) requires an argument!\r\n", buf[0]);
     return -1;
   }
@@ -46,41 +46,41 @@ int parseIntArg() {
     return -1;  // Needs to be a space
   }
 
-  char argBuf[bufIndex - 2];
-  int argBufIndex = 0;
-  for (int i = 2; i <= bufIndex; i++) {
-    argBuf[argBufIndex] = (char)buf[i];
-    argBufIndex++;
+  char argBuf[buf_index - 2];
+  int argbuf_index = 0;
+  for (int i = 2; i <= buf_index; i++) {
+    argBuf[argbuf_index] = (char)buf[i];
+    argbuf_index++;
   }
 
   int arg = atoi(argBuf);
   return arg;
 }
 
-void processCommand() {
+void process_command() {
   switch(buf[0]) {
     case COMMAND_PRINT:
-      doPrint();
+      do_print();
       break;
     case COMMAND_CONFIG_EXPERIMENT:
-      doConfigExperiment(parseIntArg());
+      do_config_experiment(parse_int_arg());
       break;
     case COMMAND_CONFIG_GREEN_LED:
-      doConfigGreenLED(parseIntArg());
+      do_config_green_led(parse_int_arg());
       break;
     case COMMAND_RESET:
-      doReset();
+      do_reset();
       break;
     case COMMAND_RUN_EXPERIMENT:
-      doRunExperiment();
+      do_run_experiment();
       break;
   }
 
   // Reset index to start processing new command
-  bufIndex = 0;
+  buf_index = 0;
 }
 
-void printUsage() {
+void print_usage() {
   char *usage = "Menu Options:\r\n"
                 "p  : Print data collected for experiment, including job releases and missed deadlines.\r\n"
                 "e #: Set-Up this experiment number (e.g. Set flags to activate/deactivate delays in ISRs).\r\n"
@@ -90,7 +90,7 @@ void printUsage() {
   printf(usage);
 }
 
-void handleMenu() {
+void handle_menu() {
   int c = fgetc(stdin);
   if (c == -1) {
     // Not sure why, but when no serial data is sent, the value is 0xFF
@@ -98,11 +98,11 @@ void handleMenu() {
   }
 
   if (c == '\r') {
-    if (bufIndex > 0) {
-      processCommand();
+    if (buf_index > 0) {
+      process_command();
     }
   } else {
-    buf[bufIndex] = c;
-    bufIndex++;
+    buf[buf_index] = c;
+    buf_index++;
   }
 }

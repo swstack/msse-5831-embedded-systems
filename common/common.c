@@ -12,7 +12,7 @@ ISR(TIMER0_COMPA_vect) {
   uptime_ms++;
 }
 
-void initInputButtons() {
+void init_input_buttons() {
   // Initialize Button A as input
   DDRB &= ~(1 << DDB3);
 
@@ -25,14 +25,14 @@ void initInputButtons() {
   PCMSK0 = (1 << PCINT3) | (1 << PCINT0);
 }
 
-void initOnBoardLEDs() {
+void init_on_board_leds() {
   // Configure on-board LED pins
   DDRC |= (1 << DDC7);  // yellow
   DDRD |= (1 << DDD5);  // green
   DDRB |= (1 << DDB0);  // red
 }
 
-void init1hzTimer3() {
+void init_1hz_timer_3() {
   // Setup CTC mode (Clear Timer Compare)
   TCCR3A = 0;  // Bits 0 and 1 to value 0
 
@@ -46,7 +46,7 @@ void init1hzTimer3() {
   TIMSK3 = (1 << OCIE3A);
 }
 
-void init1000hzTimer3() {
+void init_1000hz_timer_3() {
   // Setup CTC mode (Clear Timer Compare)
   TCCR3A = 0;  // Bits 0 and 1 to value 0
 
@@ -60,7 +60,7 @@ void init1000hzTimer3() {
   TIMSK3 = (1 << OCIE3A);
 }
 
-void init1000hzTimer0() {
+void init_1000hz_timer_0() {
   // Setup CTC mode (Clear Timer Compare)
   TCCR0A = 0;  // Bits 0 and 1 to value 0
 
@@ -74,7 +74,7 @@ void init1000hzTimer0() {
   TIMSK0 = (1 << OCIE0A);
 }
 
-void toggleOnBoardYellow() {
+void toggle_on_board_yellow() {
   if (led_state_yellow == ON) {
     yellow(OFF);
   } else {
@@ -82,7 +82,7 @@ void toggleOnBoardYellow() {
   }
 }
 
-void toggleOnBoardGreen() {
+void toggle_on_board_green() {
   if (led_state_green == ON) {
     green(OFF);
   } else {
@@ -90,7 +90,7 @@ void toggleOnBoardGreen() {
   }
 }
 
-void toggleOnBoardRed() {
+void toggle_on_board_red() {
   if (led_state_red == ON) {
     red(OFF);
   } else {
@@ -125,7 +125,7 @@ void red(led_state state) {
   led_state_red = state;
 }
 
-void gpioRed(led_state state) {
+void gpio_red(led_state state) {
   if (state == ON) {
     PORTD |= (1 << PORTD6);  // Set high
   } else {
@@ -134,7 +134,7 @@ void gpioRed(led_state state) {
   led_state_red = state;
 }
 
-void gpioGreen(led_state state) {
+void gpio_green(led_state state) {
   if (state == ON) {
     PORTB |= (1 << PORTB6);  // Set high
   } else {
@@ -144,14 +144,14 @@ void gpioGreen(led_state state) {
 }
 
 
-uint32_t systemUptime() {
+uint32_t system_uptime() {
   cli();
   uint32_t cpy = uptime_ms;
   sei();
   return cpy;
 }
 
-void resetUptime() {
+void reset_uptime() {
   cli();
   uptime_ms = 0;
   sei();

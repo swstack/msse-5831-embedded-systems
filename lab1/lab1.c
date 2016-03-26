@@ -13,22 +13,22 @@
 /*
   Flags and Globals
 */
-bool menuRelease = false;
-int normalFirst = false;
-bool menuFirst = false;
+bool menu_release = false;
+int normal_first = false;
+bool menu_first = false;
 uint32_t last_red_cycle = 0;
 
 /*
   ISR Defns
 */
 ISR(PCINT0_vect) {
-  uint8_t pinVal = PINB & _BV(PB3);
-  if (pinVal != 0) {
+  uint8_t pin_val = PINB & _BV(PB3);
+  if (pin_val != 0) {
     // button release
-    if (menuRelease == false) {
-      menuRelease = true;
+    if (menu_release == false) {
+      menu_release = true;
     } else {
-      menuRelease = false;
+      menu_release = false;
     }
   }
 }
@@ -38,19 +38,19 @@ ISR(PCINT0_vect) {
 */
 void reset_state() {
   last_red_cycle = 0;
-  resetUptime();
+  reset_uptime();
 }
 
 void print_uptime() {
   printf("%lu\r\n", uptime_ms);
 }
 
-void setupSerial() {
+void setup_serial() {
   SetupHardware();
 }
 
-void handleRedLedTask() {
-  uint32_t current_cycle = systemUptime() / 100;
+void handle_task_red_led() {
+  uint32_t current_cycle = system_uptime() / 100;
   if (current_cycle > last_red_cycle) {
     last_red_cycle = current_cycle;
     uint8_t redval = PINB & _BV(PB4);
@@ -65,7 +65,7 @@ void handleRedLedTask() {
 /*
   Main and Inits
 */
-void initGreenLedTask() {
+void init_task_green_led() {
   // Uses timer 1
   DDRB |= (1 << DDB6);
   TCCR1A |= (1 << COM1B1) | (1 << WGM11);
@@ -74,14 +74,14 @@ void initGreenLedTask() {
   OCR1B = ICR1 / 2;
 }
 
-void initYellowLedTask() {
+void init_task_yellow_led() {
   TCCR3A = 0x00;
   TCCR3B = (1 << WGM32) | (1 << CS31) | (1 << CS30);
   OCR3A = 6250;
   TIMSK3 = (1 << OCIE3A);
 }
 
-void initRedLedTask() {
+void init_task_red_led() {
   DDRB |= (1 << DDB4);
 }
 
@@ -92,48 +92,48 @@ void halt() {
   TCCR3B = 0;
 }
 
-void initTasks() {
-  init1000hzTimer0();
-  initGreenLedTask();
-  initRedLedTask();
-  initInputButtons();
+void init_all_tasks() {
+  init_1000hz_timer_0();
+  init_task_green_led();
+  init_task_red_led();
+  init_input_buttons();
   sei();
 }
 
-void menuLoop() {
-  if (menuFirst == false) {
-    menuFirst = true;
-    normalFirst = false;
+void loop_menu() {
+  if (menu_first == false) {
+    menu_first = true;
+    normal_first = false;
     printf("Initializing menu...\r\n");
     halt();
-    printUsage();
+    print_usage();
   }
 
-  handleMenu();
+  handle_menu();
 }
 
-void normalLoop() {
-  if (normalFirst == false) {
-    normalFirst = true;
-    menuFirst = false;
+void loop_tasks() {
+  if (normal_first == false) {
+    normal_first = true;
+    menu_first = false;
     printf("Resuming program execution...\r\n");
     reset_state();
-    initTasks();
+    init_all_tasks();
   }
 
-  handleRedLedTask();
+  handle_task_red_led();
 }
 
 int main() {
-  setupSerial();
+  setup_serial();
 
   while (1) {
     USB_Mainloop_Handler();
 
-    if (menuRelease == true) {
-      menuLoop();
+    if (menu_release == true) {
+      loop_menu();
     } else {
-      normalLoop();
+      loop_tasks();
     }
   }
 }
