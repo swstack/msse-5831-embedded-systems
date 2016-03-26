@@ -16,6 +16,7 @@
 bool menuRelease = false;
 int normalFirst = false;
 bool menuFirst = false;
+uint32_t last_red_cycle = 0;
 
 /*
   ISR Defns
@@ -35,6 +36,10 @@ ISR(PCINT0_vect) {
 /*
   Helpers
 */
+void reset_state() {
+  last_red_cycle = 0;
+  resetUptime();
+}
 
 void print_uptime() {
   printf("%lu\r\n", uptime_ms);
@@ -42,6 +47,19 @@ void print_uptime() {
 
 void setupSerial() {
   SetupHardware();
+}
+
+void handleRedLedTask() {
+  uint32_t current_cycle = systemUptime() / 100;
+  if (current_cycle > last_red_cycle) {
+    last_red_cycle = current_cycle;
+    uint8_t redval = PINB & _BV(PB4);
+    if (redval == 0) {
+      PORTB |= (1 << PORTB4);  // Turn on
+    } else {
+      PORTB &= ~(1 << PORTB4); // Turn off
+    }
+  }
 }
 
 /*
@@ -63,6 +81,10 @@ void initYellowLedTask() {
   TIMSK3 = (1 << OCIE3A);
 }
 
+void initRedLedTask() {
+  DDRB |= (1 << DDB4);
+}
+
 void halt() {
   TCCR1A = 0;
   TCCR1B = 0;
@@ -72,8 +94,8 @@ void halt() {
 
 void initTasks() {
   init1000hzTimer0();
-  initOnBoardLEDs();
   initGreenLedTask();
+  initRedLedTask();
   initInputButtons();
   sei();
 }
@@ -95,8 +117,11 @@ void normalLoop() {
     normalFirst = true;
     menuFirst = false;
     printf("Resuming program execution...\r\n");
+    reset_state();
     initTasks();
   }
+
+  handleRedLedTask();
 }
 
 int main() {

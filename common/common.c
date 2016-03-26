@@ -74,7 +74,7 @@ void init1000hzTimer0() {
   TIMSK0 = (1 << OCIE0A);
 }
 
-void toggleYellow() {
+void toggleOnBoardYellow() {
   if (led_state_yellow == ON) {
     yellow(OFF);
   } else {
@@ -82,7 +82,7 @@ void toggleYellow() {
   }
 }
 
-void toggleGreen() {
+void toggleOnBoardGreen() {
   if (led_state_green == ON) {
     green(OFF);
   } else {
@@ -90,7 +90,7 @@ void toggleGreen() {
   }
 }
 
-void toggleRed() {
+void toggleOnBoardRed() {
   if (led_state_red == ON) {
     red(OFF);
   } else {
@@ -144,9 +144,9 @@ void gpioGreen(led_state state) {
 }
 
 
-int systemUptime() {
+uint32_t systemUptime() {
   cli();
-  int cpy = uptime_ms;
+  uint32_t cpy = uptime_ms;
   sei();
   return cpy;
 }

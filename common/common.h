@@ -3,7 +3,7 @@ typedef enum { OFF, ON } led_state;
 /*
     Init Functions
 */
-void initOnBoardsLEDs();
+void initOnBoardLEDs();
 void init1hzTimer3();
 void init1000hzTimer3();
 void init1000hzTimer0();
@@ -16,9 +16,9 @@ void yellow(led_state);
 void red(led_state);
 void green(led_state);
 
-void toggleGreen();
-void toggleYellow();
-void toggleRed();
+void toggleOnBoardGreen();
+void toggleOnBoardYellow();
+void toggleOnBoardRed();
 
 void gpioRed(led_state);
 void gpioGreen(led_state);
@@ -26,6 +26,6 @@ void gpioGreen(led_state);
 /*
     Time Functions
 */
-int systemUptime();
+uint32_t systemUptime();
 void resetUptime();
 uint32_t uptime_ms;
