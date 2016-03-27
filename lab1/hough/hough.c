@@ -1,4 +1,5 @@
 #include "hough.h"
+#include <stdio.h>
 
 double PI;
 
@@ -11,6 +12,7 @@ const uint8_t thetaSize = (uint8_t) (__Width / TRATIO );
 
 char houghTransform( uint16_t rPtr, uint16_t gPtr, uint16_t bPtr )
 {
+	printf("Starting hough...\r\n");
 	int i, j, k;
 	int m, l ;
 	double bg;
@@ -119,6 +121,7 @@ char houghTransform( uint16_t rPtr, uint16_t gPtr, uint16_t bPtr )
 			dummyVar += transformImage[i][j];
 		}
 	}
+	printf("Hough done.\r\n");
 	// Transform is complete. Nothing to do with it, so we will return and lose all our work.
 	return dummyVar;
 }

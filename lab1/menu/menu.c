@@ -91,7 +91,6 @@ void print_usage() {
 }
 
 void initial_prompt() {
-  uint32_t cycles = 0;
   while(1) {
     USB_Mainloop_Handler();
     printf("Press any key to continue...\r\n");

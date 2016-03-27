@@ -14,6 +14,7 @@ void reset_state();
 void print_uptime();
 void handle_task_yellow_led();
 void handle_task_red_led();
+void handle_task_hough_transform();
 void init_serial();
 void init_leds();
 void halt();
@@ -94,20 +95,20 @@ void set_led_green(led_state state) {
 }
 
 void handle_task_hough_transform() {
-  printf("Executing Hough Transform...");
+  printf("Executing Hough Transform...\r\n");
   volatile char dummyVar;
   uint32_t start = system_uptime();
-  dummyVar = houghTransform((uint16_t)&red, (uint16_t)&green, (uint16_t)&blue);
+  dummyVar = houghTransform((uint16_t)&image_red, (uint16_t)&image_green, (uint16_t)&image_blue);
   uint32_t end = system_uptime();
-  printf("Hough Transform completed in %lu milliseconds.", end - start);
+  printf("Hough Transform completed in %lu milliseconds.\r\n", end - start);
 }
 
 void handle_task_yellow_led() {
   uint8_t yelval = PIND & _BV(PD6);
   if (yelval == 0) {
-    PORTD |= (1 << PORTD6);  // Turn on
+    set_led_yellow(ON);
   } else {
-    PORTD &= ~(1 << PORTD6); // Turn off
+    set_led_yellow(OFF);
   }
 }
 
@@ -117,9 +118,9 @@ void handle_task_red_led() {
     last_red_cycle = current_cycle;
     uint8_t redval = PINB & _BV(PB4);
     if (redval == 0) {
-      PORTB |= (1 << PORTB4);  // Turn on
+      set_led_red(ON);
     } else {
-      PORTB &= ~(1 << PORTB4); // Turn off
+      set_led_red(OFF);
     }
   }
 }
@@ -147,6 +148,7 @@ void flash_all_leds() {
 *************************************************/
 void init_serial() {
   SetupHardware();
+  sei();
 }
 
 void init_leds() {
@@ -175,6 +177,7 @@ void init_all_tasks() {
   init_task_green_led();
   init_task_yellow_led();
   init_input_buttons();
+  sei();
 }
 
 /************************************************
@@ -189,7 +192,6 @@ void loop_menu() {
     print_usage();
   }
 
-  USB_Mainloop_Handler();
   handle_menu();
 }
 
@@ -207,14 +209,11 @@ void loop_tasks() {
 
 int main() {
   flash_all_leds();
-  
   init_serial();
-  sei();
-
   initial_prompt();
 
   while (1) {
-
+    USB_Mainloop_Handler();
     if (menu_release == true) {
       loop_menu();
     } else {

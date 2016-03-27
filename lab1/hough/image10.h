@@ -4,7 +4,7 @@
 #define __Height 6
 #define __Width 6
 
-static const uint8_t red[10][10] PROGMEM = {
+static const uint8_t image_red[10][10] PROGMEM = {
   { 21,21,20,16,13,13,15,17,19,19} ,
   { 9,21,27,22,16,17,18,17,19,19} ,
   { 12,16,15,12,15,23,22,16,17,19} ,
@@ -17,7 +17,7 @@ static const uint8_t red[10][10] PROGMEM = {
   { 0,0,2,29,50,47,28,16,0,10}
 };
 
-static const uint8_t blue[10][10] PROGMEM = {
+static const uint8_t image_blue[10][10] PROGMEM = {
   { 40,41,40,36,34,34,37,39,41,41} ,
   { 28,40,47,42,37,38,40,39,41,41} ,
   { 35,39,39,36,40,46,46,40,41,40} ,
@@ -30,7 +30,7 @@ static const uint8_t blue[10][10] PROGMEM = {
   { 49,42,49,75,93,89,68,54,33,43}
 };
 
-static const uint8_t green[10][10] PROGMEM = {
+static const uint8_t image_green[10][10] PROGMEM = {
   { 80,78,75,69,63,61,61,62,64,65} ,
   { 68,80,84,75,68,65,64,63,65,65} ,
   { 77,80,77,72,71,77,72,66,65,67} ,
