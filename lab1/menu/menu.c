@@ -17,14 +17,14 @@ void do_print() {
   printf("Running command: Print\r\n");
 }
 
-void do_config_experiment(int experimentNumber) {
-  if (experimentNumber == -1) {return;}
-  printf("Running command: Config Experiment (%i)\r\n", experimentNumber);
+void do_config_experiment(int experiment_number) {
+  if (experiment_number == -1) {return;}
+  printf("Running command: Config Experiment (%i)\r\n", experiment_number);
 }
 
-void do_config_green_led(int toggleRate) {
-  if (toggleRate == -1) {return;}
-  printf("Running command: Config Green LED (%i)\r\n", toggleRate);
+void do_config_green_led(int toggle_rate) {
+  if (toggle_rate == -1) {return;}
+  printf("Running command: Config Green LED (%i)\r\n", toggle_rate);
 }
 
 void do_reset() {
@@ -91,9 +91,10 @@ void print_usage() {
 }
 
 void initial_prompt() {
+  uint32_t cycles = 0;
   while(1) {
     USB_Mainloop_Handler();
-    printf("Press any key to continue...");
+    printf("Press any key to continue...\r\n");
     if (fgetc(stdin) != -1) {
       return;
     }

@@ -1,7 +1,7 @@
 #include <avr/io.h>
+#include <VirtualSerial.h>
 #include <common.h>
 #include <menu.h>
-#include <VirtualSerial.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
@@ -14,6 +14,9 @@ void reset_state();
 void print_uptime();
 void handle_task_yellow_led();
 void handle_task_red_led();
+void init_serial();
+void init_leds();
+void halt();
 
 /************************************************
   Flags/Globals
@@ -172,7 +175,6 @@ void init_all_tasks() {
   init_task_green_led();
   init_task_yellow_led();
   init_input_buttons();
-  sei();
 }
 
 /************************************************
@@ -204,10 +206,12 @@ void loop_tasks() {
 }
 
 int main() {
-  init_serial();
-
   flash_all_leds();
-  // initial_prompt();
+  
+  init_serial();
+  sei();
+
+  initial_prompt();
 
   while (1) {
 
