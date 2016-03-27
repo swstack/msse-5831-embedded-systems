@@ -46,14 +46,14 @@ int parse_int_arg() {
     return -1;  // Needs to be a space
   }
 
-  char argBuf[buf_index - 2];
-  int argbuf_index = 0;
+  char arg_bug[buf_index - 2];
+  int arg_bug_index = 0;
   for (int i = 2; i <= buf_index; i++) {
-    argBuf[argbuf_index] = (char)buf[i];
-    argbuf_index++;
+    arg_bug[arg_bug_index] = (char)buf[i];
+    arg_bug_index++;
   }
 
-  int arg = atoi(argBuf);
+  int arg = atoi(arg_bug);
   return arg;
 }
 
@@ -88,6 +88,17 @@ void print_usage() {
                 "z  : Reset all variables to set up for a new experiment.\r\n"
                 "g  : Go signal for start experiment.\r\n";
   printf(usage);
+}
+
+void initial_prompt() {
+  while(1) {
+    USB_Mainloop_Handler();
+    printf("Press any key to continue...");
+    if (fgetc(stdin) != -1) {
+      return;
+    }
+    _delay_ms(1000);
+  }
 }
 
 void handle_menu() {

@@ -1,4 +1,3 @@
-#include <avr/interrupt.h>
 #include "common.h"
 
 // Global variables
@@ -76,29 +75,29 @@ void init_1000hz_timer_0() {
 
 void toggle_on_board_yellow() {
   if (led_state_yellow == ON) {
-    yellow(OFF);
+    set_on_board_yellow(OFF);
   } else {
-    yellow(ON);
+    set_on_board_yellow(ON);
   }
 }
 
 void toggle_on_board_green() {
   if (led_state_green == ON) {
-    green(OFF);
+    set_on_board_green(OFF);
   } else {
-    green(ON);
+    set_on_board_green(ON);
   }
 }
 
 void toggle_on_board_red() {
   if (led_state_red == ON) {
-    red(OFF);
+    set_on_board_red(OFF);
   } else {
-    red(ON);
+    set_on_board_red(ON);
   }
 }
 
-void yellow(led_state state) {
+void set_on_board_yellow(led_state state) {
   if (state == ON) {
     PORTC |= (1 << PORTC7);  // Set high
   } else {
@@ -107,7 +106,7 @@ void yellow(led_state state) {
   led_state_yellow = state;
 }
 
-void green(led_state state) {
+void set_on_board_green(led_state state) {
   if (state == ON) {
     PORTD &= ~(1 << PORTD5);  // Set low
   } else {
@@ -116,7 +115,7 @@ void green(led_state state) {
   led_state_green = state;
 }
 
-void red(led_state state) {
+void set_on_board_red(led_state state) {
   if (state == ON) {
     PORTB &= ~(1 << PORTB0);  // Set low
   } else {
@@ -124,25 +123,6 @@ void red(led_state state) {
   }
   led_state_red = state;
 }
-
-void gpio_red(led_state state) {
-  if (state == ON) {
-    PORTD |= (1 << PORTD6);  // Set high
-  } else {
-    PORTD &= ~(1 << PORTD6);  // Set low
-  }
-  led_state_red = state;
-}
-
-void gpio_green(led_state state) {
-  if (state == ON) {
-    PORTB |= (1 << PORTB6);  // Set high
-  } else {
-    PORTB &= ~(1 << PORTB6);  // Set low
-  }
-  led_state_red = state;
-}
-
 
 uint32_t system_uptime() {
   cli();

@@ -1,3 +1,11 @@
+#ifndef _COMMON
+#define _COMMON
+
+#define F_CPU 16000000
+
+#include <util/delay.h>
+#include <avr/interrupt.h>
+
 typedef enum { OFF, ON } led_state;
 
 /*
@@ -12,16 +20,13 @@ void init_input_buttons();
 /*
     LED Functions
 */
-void yellow(led_state);
-void red(led_state);
-void green(led_state);
+void set_on_board_yellow(led_state);
+void set_on_board_red(led_state);
+void set_on_board_green(led_state);
 
 void toggle_on_board_green();
 void toggle_on_board_yellow();
 void toggle_on_board_red();
-
-void gpio_red(led_state);
-void gpio_green(led_state);
 
 /*
     Time Functions
@@ -29,3 +34,5 @@ void gpio_green(led_state);
 uint32_t system_uptime();
 void reset_uptime();
 uint32_t uptime_ms;
+
+#endif
