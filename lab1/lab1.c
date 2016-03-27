@@ -25,6 +25,7 @@ bool menu_release = false;
 int normal_first = false;
 bool menu_first = false;
 uint32_t last_red_cycle = 0;
+uint8_t counter_40hz = 0;
 
 /*
   ISR Defns
@@ -43,7 +44,14 @@ ISR(PCINT0_vect) {
 
 ISR(TIMER3_COMPA_vect) {
   // Every 40hz
-  handle_task_yellow_led();
+  if (counter_40hz >= 4) {
+    handle_task_yellow_led();
+    // handle_task_hough_transform();
+    counter_40hz = 0;
+  } else {
+    counter_40hz++;
+  }
+
 }
 
 /*
