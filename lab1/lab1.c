@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <hough.h>
+#include <stdlib.h>
 
 /************************************************
   Function Prototypes
@@ -23,6 +24,7 @@ void halt();
   Flags/Globals
 *************************************************/
 bool menu_release = false;
+bool jitter_release = false;
 int normal_first = false;
 bool menu_first = false;
 uint32_t last_red_cycle = 0;
@@ -47,6 +49,7 @@ ISR(TIMER3_COMPA_vect) {
   // Every 40hz
   if (counter_40hz >= 4) {
     handle_task_yellow_led();
+    jitter_release = true;
     // handle_task_hough_transform();
     counter_40hz = 0;
   } else {
@@ -125,9 +128,25 @@ void handle_task_red_led() {
   }
 }
 
+bool one_in_four() {
+   int random_int = (rand() % 4) + 1;
+   if (random_int == 4) {
+     return true;
+   } else {
+     return false;
+   }
+}
+
+void handle_task_jitter_led() {
+  if (one_in_four() == true) {
+    set_on_board_yellow(ON);
+    _delay_ms(5);
+    set_on_board_yellow(OFF);
+  }
+}
+
 void flash_all_leds() {
   init_leds();
-  init_on_board_leds();
   set_led_green(ON);
   set_led_yellow(ON);
   set_led_red(ON);
@@ -152,9 +171,14 @@ void init_serial() {
 }
 
 void init_leds() {
+  init_on_board_leds();
   DDRD |= (1 << DDD6);
   DDRB |= (1 << DDB6);
   DDRB |= (1 << DDB4);
+}
+
+void init_jitter_led_task() {
+  srand(0);
 }
 
 void init_task_green_led() {
@@ -176,6 +200,7 @@ void init_all_tasks() {
   init_1000hz_timer_0();
   init_task_green_led();
   init_task_yellow_led();
+  init_jitter_led_task();
   init_input_buttons();
   sei();
 }
@@ -205,6 +230,11 @@ void loop_tasks() {
   }
 
   handle_task_red_led();
+
+  if (jitter_release == true) {
+    handle_task_jitter_led();
+    jitter_release = false;
+  }
 }
 
 int main() {
@@ -214,6 +244,7 @@ int main() {
 
   while (1) {
     USB_Mainloop_Handler();
+
     if (menu_release == true) {
       loop_menu();
     } else {
