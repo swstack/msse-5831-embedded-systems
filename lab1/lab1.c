@@ -206,6 +206,61 @@ void init_all_tasks() {
 }
 
 /************************************************
+  Experiments
+*************************************************/
+
+void setup_experiment() {
+}
+
+void run_experiment_1() {
+  printf("Running experiment 1...\r\n");
+  // TODO: Implement me
+  printf("Experiment 1 complete.\r\n");
+}
+
+void run_experiment_2() {
+  printf("Running experiment 2...\r\n");
+  // TODO: Implement me
+  printf("Experiment 2 complete.\r\n");
+}
+
+void run_experiment_3() {
+  printf("Running experiment 3...\r\n");
+  // TODO: Implement me
+  printf("Experiment 3 complete.\r\n");
+}
+
+void run_experiment_4() {
+  printf("Running experiment 4...\r\n");
+  // TODO: Implement me
+  printf("Experiment 4 complete.\r\n");
+}
+
+void run_experiment_5() {
+  printf("Running experiment 5...\r\n");
+  // TODO: Implement me
+  printf("Experiment 5 complete.\r\n");
+}
+
+void run_experiment_6() {
+  printf("Running experiment 6...\r\n");
+  // TODO: Implement me
+  printf("Experiment 6 complete.\r\n");
+}
+
+void run_experiment_7() {
+  printf("Running experiment 7...\r\n");
+  // TODO: Implement me
+  printf("Experiment 7 complete.\r\n");
+}
+
+void run_experiment_8() {
+  printf("Running experiment 8...\r\n");
+  // TODO: Implement me
+  printf("Experiment 8 complete.\r\n");
+}
+
+/************************************************
   Main Program
 *************************************************/
 void loop_menu() {
