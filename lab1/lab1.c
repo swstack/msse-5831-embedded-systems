@@ -16,6 +16,7 @@ void print_uptime();
 void handle_task_yellow_led();
 void handle_task_red_led();
 void handle_task_hough_transform();
+void handle_task_green_led_count();
 void init_serial();
 void init_leds();
 void halt();
@@ -29,6 +30,7 @@ int normal_first = false;
 bool menu_first = false;
 uint32_t last_red_cycle = 0;
 uint8_t counter_40hz = 0;
+uint8_t green_led_count = 0;
 
 /************************************************
   ISRs
@@ -55,7 +57,12 @@ ISR(TIMER3_COMPA_vect) {
   } else {
     counter_40hz++;
   }
+}
 
+ISR(TIMER1_OVF_vect) {
+  // PWM timer
+  handle_task_green_led_count();
+  toggle_on_board_green(); // not part of assignment, just for debug
 }
 
 /************************************************
@@ -69,7 +76,9 @@ void halt() {
 }
 
 void reset_state() {
+  counter_40hz = 0;
   last_red_cycle = 0;
+  green_led_count = 0;
   reset_uptime();
 }
 
@@ -126,6 +135,10 @@ void handle_task_red_led() {
       set_led_red(OFF);
     }
   }
+}
+
+void handle_task_green_led_count() {
+  green_led_count++;
 }
 
 bool one_in_four() {
@@ -186,6 +199,7 @@ void init_task_green_led() {
   TCCR1B |= (1 << WGM13) | (1 << CS12) | (1 << CS10);
   ICR1 = 1562;
   OCR1B = ICR1 / 2;
+  TIMSK1 = (0 << ICIE1) | (0 << OCIE1B) | (0 << OCIE1A) | (1 << TOIE1);
 }
 
 void init_task_yellow_led() {
