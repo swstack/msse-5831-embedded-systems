@@ -31,11 +31,19 @@ int normal_first = false;
 bool menu_first = false;
 
 // Task state
+
+int task_missed_red_led = 0;
+int task_missed_yellow_led = 0;
+int task_missed_jitter_led = 0;
+int task_missed_hough_transform = 0;
+int task_missed_green_led_count = 0;
+
 bool task_release_red_led = false;
 bool task_release_yellow_led = false;
 bool task_release_jitter_led = false;
 bool task_release_hough_transform = false;
 bool task_release_green_led_count = false;
+
 uint32_t red_led_ms_counter = 0;
 uint8_t counter_40hz = 0;
 uint8_t green_led_count = 0;
@@ -68,9 +76,31 @@ ISR(PCINT0_vect) {
 ISR(TIMER3_COMPA_vect) {
   // Every 40hz
   if (counter_40hz >= 4) {
-    task_release_yellow_led = true;
-    task_release_jitter_led = true;
-    task_release_hough_transform = true;
+
+    // Handle yellow LED task release
+    if (task_release_yellow_led == true) {
+      // Task missed!!!
+      task_missed_yellow_led++;
+    } else {
+      task_release_yellow_led = true;
+    }
+
+    // Handle jitter LED task release
+    if (task_release_jitter_led == true) {
+      // Task missed!!!
+      task_missed_jitter_led++;
+    } else {
+      task_release_jitter_led = true;
+    }
+
+    // Handle hough transform task release
+    if (task_release_hough_transform == true) {
+      // Task missed!!!
+      task_missed_hough_transform++;
+    } else {
+      task_release_hough_transform = true;
+    }
+
     counter_40hz = 0;
   } else {
     counter_40hz++;
@@ -87,7 +117,12 @@ ISR(TIMER0_COMPA_vect) {
   uptime_ms++;
   red_led_ms_counter++;
   if (red_led_ms_counter >= 100) {
-    task_release_red_led = true;
+    if (task_release_red_led == true) {
+      // Task missed!!!
+      task_missed_red_led++;
+    } else {
+      task_release_red_led = true;
+    }
     red_led_ms_counter = 0;
   }
 
@@ -117,6 +152,11 @@ void reset_task_state() {
   red_led_ms_counter = 0;
   counter_40hz = 0;
   green_led_count = 0;
+  task_missed_red_led = 0;
+  task_missed_yellow_led = 0;
+  task_missed_jitter_led = 0;
+  task_missed_hough_transform = 0;
+  task_missed_green_led_count = 0;
 }
 
 void reset_experiment_state() {
