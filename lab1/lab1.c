@@ -12,6 +12,7 @@
   Function Prototypes
 *************************************************/
 void reset_state();
+void reset_experiment_state();
 void print_uptime();
 void handle_task_yellow_led();
 void handle_task_red_led();
@@ -24,13 +25,26 @@ void halt();
 /************************************************
   Flags/Globals
 *************************************************/
+
 bool menu_release = false;
 bool jitter_release = false;
 int normal_first = false;
 bool menu_first = false;
-uint32_t last_red_cycle = 0;
-uint8_t counter_40hz = 0;
-uint8_t green_led_count = 0;
+
+// Task state
+uint32_t last_red_cycle;
+uint8_t counter_40hz;
+uint8_t green_led_count;
+
+// Experiments state
+bool experiment_1_running = false;
+bool experiment_2_running = false;
+bool experiment_3_running = false;
+bool experiment_4_running = false;
+bool experiment_5_running = false;
+bool experiment_6_running = false;
+
+uint32_t experiment_time_remaining = 0;
 
 /************************************************
   ISRs
@@ -65,6 +79,16 @@ ISR(TIMER1_OVF_vect) {
   toggle_on_board_green(); // not part of assignment, just for debug
 }
 
+ISR(TIMER0_COMPA_vect) {
+  // Every 1000hz
+  uptime_ms++;
+  if (experiment_time_remaining > 0) {
+    experiment_time_remaining--;
+  } else {
+    reset_experiment_state();
+  }
+}
+
 /************************************************
   Helpers
 *************************************************/
@@ -80,6 +104,16 @@ void reset_state() {
   last_red_cycle = 0;
   green_led_count = 0;
   reset_uptime();
+}
+
+void reset_experiment_state() {
+  experiment_1_running = false;
+  experiment_2_running = false;
+  experiment_3_running = false;
+  experiment_4_running = false;
+  experiment_5_running = false;
+  experiment_6_running = false;
+  experiment_time_remaining = 0;
 }
 
 void set_led_red(led_state state) {
@@ -228,49 +262,65 @@ void setup_experiment() {
 
 void run_experiment_1() {
   printf("Running experiment 1...\r\n");
-  // TODO: Implement me
+  // TODO: Implement
+  experiment_2_running = true;
+  experiment_time_remaining = 15000;
   printf("Experiment 1 complete.\r\n");
 }
 
 void run_experiment_2() {
   printf("Running experiment 2...\r\n");
   // TODO: Implement me
+  experiment_2_running = true;
+  experiment_time_remaining = 15000;
   printf("Experiment 2 complete.\r\n");
 }
 
 void run_experiment_3() {
   printf("Running experiment 3...\r\n");
   // TODO: Implement me
+  experiment_2_running = true;
+  experiment_time_remaining = 15000;
   printf("Experiment 3 complete.\r\n");
 }
 
 void run_experiment_4() {
   printf("Running experiment 4...\r\n");
   // TODO: Implement me
+  experiment_2_running = true;
+  experiment_time_remaining = 15000;
   printf("Experiment 4 complete.\r\n");
 }
 
 void run_experiment_5() {
   printf("Running experiment 5...\r\n");
   // TODO: Implement me
+  experiment_2_running = true;
+  experiment_time_remaining = 15000;
   printf("Experiment 5 complete.\r\n");
 }
 
 void run_experiment_6() {
   printf("Running experiment 6...\r\n");
   // TODO: Implement me
+  experiment_2_running = true;
+  experiment_time_remaining = 15000;
   printf("Experiment 6 complete.\r\n");
 }
 
 void run_experiment_7() {
   printf("Running experiment 7...\r\n");
   // TODO: Implement me
+  experiment_2_running = true;
+  experiment_time_remaining = 15000;
   printf("Experiment 7 complete.\r\n");
 }
 
 void run_experiment_8() {
   printf("Running experiment 8...\r\n");
   // TODO: Implement me
+  experiment_2_running = true;
+  experiment_time_remaining = 15000;
   printf("Experiment 8 complete.\r\n");
 }
 
