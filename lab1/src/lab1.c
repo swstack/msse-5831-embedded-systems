@@ -11,7 +11,7 @@
 /************************************************
   Function Prototypes
 *************************************************/
-void reset_state();
+void reset_task_state();
 void reset_experiment_state();
 void print_uptime();
 void handle_task_yellow_led();
@@ -27,14 +27,18 @@ void halt();
 *************************************************/
 
 bool menu_release = false;
-bool jitter_release = false;
 int normal_first = false;
 bool menu_first = false;
 
 // Task state
-uint32_t last_red_cycle;
-uint8_t counter_40hz;
-uint8_t green_led_count;
+bool task_release_red_led = false;
+bool task_release_yellow_led = false;
+bool task_release_jitter_led = false;
+bool task_release_hough_transform = false;
+bool task_release_green_led_count = false;
+uint32_t red_led_ms_counter = 0;
+uint8_t counter_40hz = 0;
+uint8_t green_led_count = 0;
 
 // Experiments state
 bool experiment_1_running = false;
@@ -64,9 +68,9 @@ ISR(PCINT0_vect) {
 ISR(TIMER3_COMPA_vect) {
   // Every 40hz
   if (counter_40hz >= 4) {
-    handle_task_yellow_led();
-    jitter_release = true;
-    // handle_task_hough_transform();
+    task_release_yellow_led = true;
+    task_release_jitter_led = true;
+    task_release_hough_transform = true;
     counter_40hz = 0;
   } else {
     counter_40hz++;
@@ -75,13 +79,18 @@ ISR(TIMER3_COMPA_vect) {
 
 ISR(TIMER1_OVF_vect) {
   // PWM timer
-  handle_task_green_led_count();
-  toggle_on_board_green(); // not part of assignment, just for debug
+  task_release_green_led_count = true;
 }
 
 ISR(TIMER0_COMPA_vect) {
   // Every 1000hz
   uptime_ms++;
+  red_led_ms_counter++;
+  if (red_led_ms_counter >= 100) {
+    task_release_red_led = true;
+    red_led_ms_counter = 0;
+  }
+
   if (experiment_time_remaining > 0) {
     experiment_time_remaining--;
   } else {
@@ -99,11 +108,15 @@ void halt() {
   TCCR3B = 0;
 }
 
-void reset_state() {
+void reset_task_state() {
+  task_release_red_led = false;
+  task_release_yellow_led = false;
+  task_release_jitter_led = false;
+  task_release_hough_transform = false;
+  task_release_green_led_count = false;
+  red_led_ms_counter = 0;
   counter_40hz = 0;
-  last_red_cycle = 0;
   green_led_count = 0;
-  reset_uptime();
 }
 
 void reset_experiment_state() {
@@ -141,38 +154,49 @@ void set_led_green(led_state state) {
 }
 
 void handle_task_hough_transform() {
-  printf("Executing Hough Transform...\r\n");
-  volatile char dummyVar;
-  uint32_t start = system_uptime();
-  dummyVar = houghTransform((uint16_t)&image_red, (uint16_t)&image_green, (uint16_t)&image_blue);
-  uint32_t end = system_uptime();
-  printf("Hough Transform completed in %lu milliseconds.\r\n", end - start);
+  if (task_release_hough_transform == true) {
+    printf("Executing Hough Transform...\r\n");
+    volatile char dummyVar;
+    uint32_t start = system_uptime();
+    dummyVar = houghTransform((uint16_t)&image_red, (uint16_t)&image_green, (uint16_t)&image_blue);
+    uint32_t end = system_uptime();
+    printf("Hough Transform completed in %lu milliseconds.\r\n", end - start);
+    task_release_hough_transform = false;
+  }
+
 }
 
 void handle_task_yellow_led() {
-  uint8_t yelval = PIND & _BV(PD6);
-  if (yelval == 0) {
-    set_led_yellow(ON);
-  } else {
-    set_led_yellow(OFF);
+  if (task_release_yellow_led == true) {
+    uint8_t yelval = PIND & _BV(PD6);
+    if (yelval == 0) {
+      set_led_yellow(ON);
+    } else {
+      set_led_yellow(OFF);
+    }
+    task_release_yellow_led = false;
   }
+
 }
 
 void handle_task_red_led() {
-  uint32_t current_cycle = system_uptime() / 100;
-  if (current_cycle > last_red_cycle) {
-    last_red_cycle = current_cycle;
+  if (task_release_red_led == true) {
     uint8_t redval = PINB & _BV(PB4);
     if (redval == 0) {
       set_led_red(ON);
     } else {
       set_led_red(OFF);
     }
+    task_release_red_led = false;
   }
 }
 
 void handle_task_green_led_count() {
-  green_led_count++;
+  if (task_release_green_led_count == true) {
+    toggle_on_board_green();
+    green_led_count++;
+    task_release_green_led_count = false;
+  }
 }
 
 bool one_in_four() {
@@ -185,10 +209,13 @@ bool one_in_four() {
 }
 
 void handle_task_jitter_led() {
-  if (one_in_four() == true) {
-    set_on_board_yellow(ON);
-    _delay_ms(5);
-    set_on_board_yellow(OFF);
+  if (task_release_jitter_led == true) {
+    if (one_in_four() == true) {
+      set_on_board_yellow(ON);
+      _delay_ms(5);
+      set_on_board_yellow(OFF);
+    }
+    task_release_jitter_led = false;
   }
 }
 
@@ -344,16 +371,15 @@ void loop_tasks() {
     normal_first = true;
     menu_first = false;
     printf("Resuming program execution...\r\n");
-    reset_state();
+    reset_task_state();
     init_all_tasks();
   }
 
   handle_task_red_led();
-
-  if (jitter_release == true) {
-    handle_task_jitter_led();
-    jitter_release = false;
-  }
+  handle_task_jitter_led();
+  handle_task_hough_transform();
+  handle_task_yellow_led();
+  handle_task_green_led_count();
 }
 
 int main() {
