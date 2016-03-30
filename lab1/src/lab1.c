@@ -392,6 +392,13 @@ void run_experiment_8() {
 }
 
 /************************************************
+  Command callbacks
+*************************************************/
+void command_print() {
+
+}
+
+/************************************************
   Main Program
 *************************************************/
 void loop_menu() {
@@ -423,6 +430,9 @@ void loop_tasks() {
 }
 
 int main() {
+
+  on_command_print = command_print;
+
   flash_all_leds();
   init_serial();
   initial_prompt();

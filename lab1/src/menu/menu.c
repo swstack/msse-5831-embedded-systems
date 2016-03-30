@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <common.h>
+#include "menu.h"
 
 #define COMMAND_PRINT 'p'
 #define COMMAND_CONFIG_EXPERIMENT 'e'
@@ -14,25 +15,56 @@ uint8_t buf[10];
 uint8_t buf_index = 0;
 
 void do_print() {
-  printf("Running command: Print\r\n");
+  if (on_command_print != NULL) {
+    printf("Running command: Print\r\n");
+    on_command_print();
+  } else {
+    printf("No registered command handler for command: Print\r\n");
+  }
 }
 
 void do_config_experiment(int experiment_number) {
-  if (experiment_number == -1) {return;}
-  printf("Running command: Config Experiment (%i)\r\n", experiment_number);
+  if (experiment_number == -1) {
+    return;
+  }
+
+  if (on_command_config_experiment != NULL) {
+    printf("Running command: Config Experiment (%i)\r\n", experiment_number);
+    on_command_config_experiment(experiment_number);
+  } else {
+    printf("No registered command handler for command: Config Experiment\r\n");
+  }
 }
 
 void do_config_green_led(int toggle_rate) {
-  if (toggle_rate == -1) {return;}
-  printf("Running command: Config Green LED (%i)\r\n", toggle_rate);
+  if (toggle_rate == -1) {
+    return;
+  }
+
+  if (on_command_config_green_led != NULL) {
+    printf("Running command: Config Green LED (%i)\r\n", toggle_rate);
+    on_command_config_green_led(toggle_rate);
+  } else {
+    printf("No registered command handler for command: Config Green LED\r\n");
+  }
 }
 
 void do_reset() {
-  printf("Running command: Reset\r\n");
+  if (on_command_reset != NULL) {
+    printf("Running command: Reset\r\n");
+    on_command_reset();
+  } else {
+    printf("No registered command handler for command: Reset\r\n");
+  }
 }
 
 void do_run_experiment() {
-  printf("Running command: Run Experiment\r\n");
+  if (on_command_run_experiment != NULL) {
+    printf("Running command: Run Experiment\r\n");
+    on_command_run_experiment();
+  } else {
+    printf("No registered command handler for command: Run Experiment\r\n");
+  }
 }
 
 int parse_int_arg() {
