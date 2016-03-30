@@ -32,11 +32,17 @@ bool menu_first = false;
 
 // Task state
 
-int task_missed_red_led = 0;
-int task_missed_yellow_led = 0;
-int task_missed_jitter_led = 0;
-int task_missed_hough_transform = 0;
-int task_missed_green_led_count = 0;
+int task_missed_count_red_led = 0;
+int task_missed_count_yellow_led = 0;
+int task_missed_count_jitter_led = 0;
+int task_missed_count_hough_transform = 0;
+int task_missed_count_green_led_count = 0;
+
+int task_complete_count_red_led = 0;
+int task_complete_count_yellow_led = 0;
+int task_complete_count_jitter_led = 0;
+int task_complete_count_hough_transform = 0;
+int task_complete_count_green_led_count = 0;
 
 bool task_release_red_led = false;
 bool task_release_yellow_led = false;
@@ -80,7 +86,7 @@ ISR(TIMER3_COMPA_vect) {
     // Handle yellow LED task release
     if (task_release_yellow_led == true) {
       // Task missed!!!
-      task_missed_yellow_led++;
+      task_missed_count_yellow_led++;
     } else {
       task_release_yellow_led = true;
     }
@@ -88,7 +94,7 @@ ISR(TIMER3_COMPA_vect) {
     // Handle jitter LED task release
     if (task_release_jitter_led == true) {
       // Task missed!!!
-      task_missed_jitter_led++;
+      task_missed_count_jitter_led++;
     } else {
       task_release_jitter_led = true;
     }
@@ -96,7 +102,7 @@ ISR(TIMER3_COMPA_vect) {
     // Handle hough transform task release
     if (task_release_hough_transform == true) {
       // Task missed!!!
-      task_missed_hough_transform++;
+      task_missed_count_hough_transform++;
     } else {
       task_release_hough_transform = true;
     }
@@ -119,7 +125,7 @@ ISR(TIMER0_COMPA_vect) {
   if (red_led_ms_counter >= 100) {
     if (task_release_red_led == true) {
       // Task missed!!!
-      task_missed_red_led++;
+      task_missed_count_red_led++;
     } else {
       task_release_red_led = true;
     }
@@ -152,11 +158,11 @@ void reset_task_state() {
   red_led_ms_counter = 0;
   counter_40hz = 0;
   green_led_count = 0;
-  task_missed_red_led = 0;
-  task_missed_yellow_led = 0;
-  task_missed_jitter_led = 0;
-  task_missed_hough_transform = 0;
-  task_missed_green_led_count = 0;
+  task_missed_count_red_led = 0;
+  task_missed_count_yellow_led = 0;
+  task_missed_count_jitter_led = 0;
+  task_missed_count_hough_transform = 0;
+  task_missed_count_green_led_count = 0;
 }
 
 void reset_experiment_state() {
@@ -201,6 +207,8 @@ void handle_task_hough_transform() {
     dummyVar = houghTransform((uint16_t)&image_red, (uint16_t)&image_green, (uint16_t)&image_blue);
     uint32_t end = system_uptime();
     printf("Hough Transform completed in %lu milliseconds.\r\n", end - start);
+
+    task_complete_count_hough_transform++;
     task_release_hough_transform = false;
   }
 
@@ -214,6 +222,7 @@ void handle_task_yellow_led() {
     } else {
       set_led_yellow(OFF);
     }
+    task_complete_count_yellow_led++;
     task_release_yellow_led = false;
   }
 
@@ -227,6 +236,7 @@ void handle_task_red_led() {
     } else {
       set_led_red(OFF);
     }
+    task_complete_count_red_led++;
     task_release_red_led = false;
   }
 }
@@ -235,6 +245,7 @@ void handle_task_green_led_count() {
   if (task_release_green_led_count == true) {
     toggle_on_board_green();
     green_led_count++;
+    task_complete_count_green_led_count++;
     task_release_green_led_count = false;
   }
 }
@@ -255,6 +266,7 @@ void handle_task_jitter_led() {
       _delay_ms(5);
       set_on_board_yellow(OFF);
     }
+    task_complete_count_jitter_led++;
     task_release_jitter_led = false;
   }
 }
@@ -395,7 +407,20 @@ void run_experiment_8() {
   Command callbacks
 *************************************************/
 void command_print() {
-
+  char *stats = "Stats:\r\n"
+                "Green LED       : Completions (%i) Misses (%i)\r\n"
+                "Yellow LED      : Completions (%i) Misses (%i)\r\n"
+                "Red LED         : Completions (%i) Misses (%i)\r\n"
+                "Jitter LED      : Completions (%i) Misses (%i)\r\n"
+                "Hough Transform : Completions (%i) Misses (%i)\r\n";
+  printf(
+    stats,
+    task_complete_count_green_led_count,  task_missed_count_green_led_count,
+    task_complete_count_yellow_led,       task_missed_count_yellow_led,
+    task_complete_count_red_led,          task_missed_count_red_led,
+    task_complete_count_jitter_led,       task_missed_count_jitter_led,
+    task_complete_count_hough_transform,  task_missed_count_hough_transform
+  );
 }
 
 /************************************************
