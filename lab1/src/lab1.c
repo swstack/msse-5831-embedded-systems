@@ -86,7 +86,11 @@ ISR(PCINT0_vect) {
 ISR(TIMER3_COMPA_vect) {
   // Interrupts every 25ms (40hz)
 
+  counter_10hz++;
+
   if (counter_10hz >= 4) {
+    counter_10hz = 0;
+
     // Enter this block every 100ms (10hz)
 
     // Handle yellow LED task release
@@ -106,8 +110,6 @@ ISR(TIMER3_COMPA_vect) {
     }
 
     counter_10hz = 0;
-  } else {
-    counter_10hz++;
   }
 
   // Handle jitter LED task release
@@ -215,6 +217,7 @@ void handle_task_yellow_led() {
 }
 
 void handle_task_red_led() {
+
   if (system_uptime() > 100) {
     // Something took greater than 100ms...we missed our red task
     task_missed_count_red_led++;
