@@ -51,7 +51,7 @@ bool task_release_hough_transform = false;
 bool task_release_green_led_count = false;
 
 uint32_t red_led_ms_counter = 0;
-uint8_t counter_40hz = 0;
+uint8_t counter_10hz = 0;
 uint8_t green_led_count = 0;
 
 // Experiments state
@@ -61,6 +61,8 @@ bool experiment_3_running = false;
 bool experiment_4_running = false;
 bool experiment_5_running = false;
 bool experiment_6_running = false;
+bool experiment_7_running = false;
+bool experiment_8_running = false;
 
 uint32_t experiment_time_remaining = 0;
 
@@ -68,6 +70,8 @@ uint32_t experiment_time_remaining = 0;
   ISRs
 *************************************************/
 ISR(PCINT0_vect) {
+  // Interrutps when Button A is pushed
+
   uint8_t pin_val = PINB & _BV(PB3);
   if (pin_val != 0) {
     // button release
@@ -80,8 +84,10 @@ ISR(PCINT0_vect) {
 }
 
 ISR(TIMER3_COMPA_vect) {
-  // Every 40hz
-  if (counter_40hz >= 4) {
+  // Interrupts every 25ms (40hz)
+
+  if (counter_10hz >= 4) {
+    // Enter this block every 100ms (10hz)
 
     // Handle yellow LED task release
     if (task_release_yellow_led == true) {
@@ -89,14 +95,6 @@ ISR(TIMER3_COMPA_vect) {
       task_missed_count_yellow_led++;
     } else {
       task_release_yellow_led = true;
-    }
-
-    // Handle jitter LED task release
-    if (task_release_jitter_led == true) {
-      // Task missed!!!
-      task_missed_count_jitter_led++;
-    } else {
-      task_release_jitter_led = true;
     }
 
     // Handle hough transform task release
@@ -107,10 +105,19 @@ ISR(TIMER3_COMPA_vect) {
       task_release_hough_transform = true;
     }
 
-    counter_40hz = 0;
+    counter_10hz = 0;
   } else {
-    counter_40hz++;
+    counter_10hz++;
   }
+
+  // Handle jitter LED task release
+  if (task_release_jitter_led == true) {
+    // Task missed!!!
+    task_missed_count_jitter_led++;
+  } else {
+    task_release_jitter_led = true;
+  }
+
 }
 
 ISR(TIMER1_OVF_vect) {
@@ -120,23 +127,8 @@ ISR(TIMER1_OVF_vect) {
 
 ISR(TIMER0_COMPA_vect) {
   // Every 1000hz
-  uptime_ms++;
-  red_led_ms_counter++;
-  if (red_led_ms_counter >= 100) {
-    if (task_release_red_led == true) {
-      // Task missed!!!
-      task_missed_count_red_led++;
-    } else {
-      task_release_red_led = true;
-    }
-    red_led_ms_counter = 0;
-  }
 
-  if (experiment_time_remaining > 0) {
-    experiment_time_remaining--;
-  } else {
-    reset_experiment_state();
-  }
+  uptime_ms++;
 }
 
 /************************************************
@@ -156,7 +148,7 @@ void reset_task_state() {
   task_release_hough_transform = false;
   task_release_green_led_count = false;
   red_led_ms_counter = 0;
-  counter_40hz = 0;
+  counter_10hz = 0;
   green_led_count = 0;
   task_missed_count_red_led = 0;
   task_missed_count_yellow_led = 0;
@@ -201,17 +193,11 @@ void set_led_green(led_state state) {
 
 void handle_task_hough_transform() {
   if (task_release_hough_transform == true) {
-    printf("Executing Hough Transform...\r\n");
     volatile char dummyVar;
-    uint32_t start = system_uptime();
     dummyVar = houghTransform((uint16_t)&image_red, (uint16_t)&image_green, (uint16_t)&image_blue);
-    uint32_t end = system_uptime();
-    printf("Hough Transform completed in %lu milliseconds.\r\n", end - start);
-
     task_complete_count_hough_transform++;
     task_release_hough_transform = false;
   }
-
 }
 
 void handle_task_yellow_led() {
@@ -229,15 +215,23 @@ void handle_task_yellow_led() {
 }
 
 void handle_task_red_led() {
-  if (task_release_red_led == true) {
+  if (system_uptime() > 100) {
+    // Something took greater than 100ms...we missed our red task
+    task_missed_count_red_led++;
+    reset_uptime();
+  }
+
+  if (system_uptime() == 100) {
+    reset_uptime();
+
     uint8_t redval = PINB & _BV(PB4);
     if (redval == 0) {
       set_led_red(ON);
     } else {
       set_led_red(OFF);
     }
+
     task_complete_count_red_led++;
-    task_release_red_led = false;
   }
 }
 
@@ -335,72 +329,36 @@ void init_all_tasks() {
 /************************************************
   Experiments
 *************************************************/
-
-void setup_experiment() {
-}
-
 void run_experiment_1() {
-  printf("Running experiment 1...\r\n");
-  // TODO: Implement
-  experiment_2_running = true;
-  experiment_time_remaining = 15000;
-  printf("Experiment 1 complete.\r\n");
+  experiment_1_running = true;
 }
 
 void run_experiment_2() {
-  printf("Running experiment 2...\r\n");
-  // TODO: Implement me
   experiment_2_running = true;
-  experiment_time_remaining = 15000;
-  printf("Experiment 2 complete.\r\n");
 }
 
 void run_experiment_3() {
-  printf("Running experiment 3...\r\n");
-  // TODO: Implement me
-  experiment_2_running = true;
-  experiment_time_remaining = 15000;
-  printf("Experiment 3 complete.\r\n");
+  experiment_3_running = true;
 }
 
 void run_experiment_4() {
-  printf("Running experiment 4...\r\n");
-  // TODO: Implement me
-  experiment_2_running = true;
-  experiment_time_remaining = 15000;
-  printf("Experiment 4 complete.\r\n");
+  experiment_4_running = true;
 }
 
 void run_experiment_5() {
-  printf("Running experiment 5...\r\n");
-  // TODO: Implement me
-  experiment_2_running = true;
-  experiment_time_remaining = 15000;
-  printf("Experiment 5 complete.\r\n");
+  experiment_5_running = true;
 }
 
 void run_experiment_6() {
-  printf("Running experiment 6...\r\n");
-  // TODO: Implement me
-  experiment_2_running = true;
-  experiment_time_remaining = 15000;
-  printf("Experiment 6 complete.\r\n");
+  experiment_6_running = true;
 }
 
 void run_experiment_7() {
-  printf("Running experiment 7...\r\n");
-  // TODO: Implement me
-  experiment_2_running = true;
-  experiment_time_remaining = 15000;
-  printf("Experiment 7 complete.\r\n");
+  experiment_7_running = true;
 }
 
 void run_experiment_8() {
-  printf("Running experiment 8...\r\n");
-  // TODO: Implement me
-  experiment_2_running = true;
-  experiment_time_remaining = 15000;
-  printf("Experiment 8 complete.\r\n");
+  experiment_8_running = true;
 }
 
 /************************************************
@@ -430,11 +388,11 @@ void loop_menu() {
   if (menu_first == false) {
     menu_first = true;
     normal_first = false;
-    printf("Initializing menu...\r\n");
     halt();
     print_usage();
   }
 
+  USB_Mainloop_Handler();
   handle_menu();
 }
 
@@ -442,7 +400,6 @@ void loop_tasks() {
   if (normal_first == false) {
     normal_first = true;
     menu_first = false;
-    printf("Resuming program execution...\r\n");
     reset_task_state();
     init_all_tasks();
   }
@@ -463,7 +420,6 @@ int main() {
   initial_prompt();
 
   while (1) {
-    USB_Mainloop_Handler();
 
     if (menu_release == true) {
       loop_menu();
