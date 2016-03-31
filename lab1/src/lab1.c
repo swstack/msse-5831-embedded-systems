@@ -159,16 +159,6 @@ void reset_task_state() {
   task_missed_count_green_led_count = 0;
 }
 
-void reset_experiment_state() {
-  experiment_1_running = false;
-  experiment_2_running = false;
-  experiment_3_running = false;
-  experiment_4_running = false;
-  experiment_5_running = false;
-  experiment_6_running = false;
-  experiment_time_remaining = 0;
-}
-
 void set_led_red(led_state state) {
   if (state == ON) {
     PORTB |= (1 << PORTB4);
@@ -240,10 +230,15 @@ void handle_task_red_led() {
 
 void handle_task_green_led_count() {
   if (task_release_green_led_count == true) {
-    toggle_on_board_green();
+
     green_led_count++;
-    task_complete_count_green_led_count++;
+    task_complete_count_green_led_count = task_complete_count_green_led_count + 2;
     task_release_green_led_count = false;
+
+    if (experiment_2_running == true) {
+      _delay_ms(20);
+    }
+
   }
 }
 
@@ -330,41 +325,6 @@ void init_all_tasks() {
 }
 
 /************************************************
-  Experiments
-*************************************************/
-void run_experiment_1() {
-  experiment_1_running = true;
-}
-
-void run_experiment_2() {
-  experiment_2_running = true;
-}
-
-void run_experiment_3() {
-  experiment_3_running = true;
-}
-
-void run_experiment_4() {
-  experiment_4_running = true;
-}
-
-void run_experiment_5() {
-  experiment_5_running = true;
-}
-
-void run_experiment_6() {
-  experiment_6_running = true;
-}
-
-void run_experiment_7() {
-  experiment_7_running = true;
-}
-
-void run_experiment_8() {
-  experiment_8_running = true;
-}
-
-/************************************************
   Command callbacks
 *************************************************/
 void command_print() {
@@ -421,6 +381,16 @@ int main() {
   flash_all_leds();
   init_serial();
   initial_prompt();
+
+  // Run an experiment by uncommenting
+  // experiment_1_running = true;
+  // experiment_2_running = true;
+  // experiment_3_running = true;
+  // experiment_4_running = true;
+  // experiment_5_running = true;
+  // experiment_6_running = true;
+  // experiment_7_running = true;
+  // experiment_8_running = true;
 
   while (1) {
 
