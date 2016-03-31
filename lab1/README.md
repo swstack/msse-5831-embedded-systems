@@ -38,8 +38,15 @@ TODO
 ### Experiment 2
 
 ```
-TODO
+Stats:
+Green LED       : Completions (294) Misses (0)
+Yellow LED      : Completions (292) Misses (0)
+Red LED         : Completions (208) Misses (66)
+Jitter LED      : Completions (852) Misses (319)
+Hough Transform : Completions (292) Misses (0)
 ```
+
+**Note:** Twice as many misses for Red LED, but fewer for Jitter oddly enough.
 
 ### Experiment 3
 
