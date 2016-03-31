@@ -21,7 +21,12 @@ Each result was recorded after roughly 30 seconds of program execution.
 ### Default, no experiments running
 
 ```
-TODO
+Stats:
+Green LED       : Completions (296) Misses (0)
+Yellow LED      : Completions (294) Misses (0)
+Red LED         : Completions (249) Misses (30)
+Jitter LED      : Completions (815) Misses (362)
+Hough Transform : Completions (294) Misses (0)
 ```
 
 ### Experiment 1
