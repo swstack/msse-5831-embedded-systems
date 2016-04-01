@@ -200,6 +200,19 @@ void handle_task_yellow_led() {
     } else {
       set_led_yellow(OFF);
     }
+
+    if (experiment_3_running == true) {
+      _delay_ms(20);
+    }
+
+    if (experiment_5_running == true) {
+      _delay_ms(30);
+    }
+
+    if (experiment_7_running == true) {
+      _delay_ms(105);
+    }
+
     task_complete_count_yellow_led++;
     task_release_yellow_led = false;
   }
@@ -237,6 +250,14 @@ void handle_task_green_led_count() {
 
     if (experiment_2_running == true) {
       _delay_ms(20);
+    }
+
+    if (experiment_4_running == true) {
+      _delay_ms(30);
+    }
+
+    if (experiment_6_running == true) {
+      _delay_ms(105);
     }
 
   }
@@ -386,7 +407,7 @@ int main() {
   // experiment_1_running = true;
   // experiment_2_running = true;
   // experiment_3_running = true;
-  // experiment_4_running = true;
+  experiment_4_running = true;
   // experiment_5_running = true;
   // experiment_6_running = true;
   // experiment_7_running = true;
