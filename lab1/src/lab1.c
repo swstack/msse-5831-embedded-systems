@@ -89,6 +89,11 @@ ISR(TIMER3_COMPA_vect) {
   counter_10hz++;
 
   if (counter_10hz >= 4) {
+    if (experiment_8_running == true) {
+      toggle_on_board_green();
+      sei();
+    }
+
     counter_10hz = 0;
 
     // Enter this block every 100ms (10hz)
@@ -209,7 +214,7 @@ void handle_task_yellow_led() {
       _delay_ms(30);
     }
 
-    if (experiment_7_running == true) {
+    if (experiment_7_running == true || experiment_8_running == true) {
       _delay_ms(105);
     }
 
@@ -411,7 +416,7 @@ int main() {
   // experiment_5_running = true;
   // experiment_6_running = true;
   // experiment_7_running = true;
-  // experiment_8_running = true;
+  experiment_8_running = true;
 
   while (1) {
 

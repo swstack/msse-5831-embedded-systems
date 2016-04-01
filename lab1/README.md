@@ -102,3 +102,14 @@ Red LED         : Completions (0) Misses (155)
 Jitter LED      : Completions (372) Misses (877)
 Hough Transform : Completions (228) Misses (83)
 ```
+
+### Experiment 8
+
+```
+Stats:
+Green LED       : Completions (284) Misses (0)
+Yellow LED      : Completions (141) Misses (141)
+Red LED         : Completions (0) Misses (140)
+Jitter LED      : Completions (339) Misses (788)
+Hough Transform : Completions (206) Misses (75)
+```
