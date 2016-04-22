@@ -1,10 +1,10 @@
 PORT=/dev/tty.usb*
 MCU=atmega32u4
-CFLAGS=-g -Wall -mcall-prologues -mmcu=$(MCU) -Os
+CFLAGS=-g -Wall -mcall-prologues -mmcu=$(MCU) -Os -std=c99 -I../VirtualSerial/ -I../common/
 LDFLAGS=-Wl,-gc-sections -Wl,-relax
 CC=avr-gcc
 TARGET=pid
-OBJECT_FILES=pid.o
+OBJECT_FILES=pid.o ../common/common.o
 
 all: $(TARGET).hex
 

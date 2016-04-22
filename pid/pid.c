@@ -1,20 +1,24 @@
 #define F_CPU 16000000
 #include <avr/io.h>
 #include <util/delay.h>
+#include <common.h>
 #include <avr/interrupt.h>
 
 int main() {
+  init_on_board_leds();
 
-  // Configure header pin 9 (motor) as output
-  DDRB |= (1 << DDB5);
+  // Configure header pin 10 (motor) as output
+  DDRB |= (1 << DDB6);
 
-  // Setup Fast PWM mode for pins OC1A and OC1B
-  TCCR1A = (1 << COM1A1) | (1 << WGM10) | (1 << WGM11);
-  TCCR1B = (1 << CS10) | (1 << WGM12) ;
+  TCCR1A |= (1 << COM1B1) | (1 << WGM11);
+  TCCR1B |= (1 << WGM13) | (1 << CS12) | (1 << CS10);
+  ICR1 = 1562;
+  OCR1B = ICR1 / 2;
 
-  ICR1 = 0xFF;
-  OCR1A = ICR1;
+  while(1) {
+    toggle_on_board_green();
+    _delay_ms(300);
 
-  while(1) {};
+  };
   return 0;
 }
