@@ -28,6 +28,8 @@ void toggle_on_board_green();
 void toggle_on_board_yellow();
 void toggle_on_board_red();
 
+void flash_on_board_leds();
+
 /*
     Time Functions
 */

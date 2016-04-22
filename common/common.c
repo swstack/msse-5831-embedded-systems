@@ -119,6 +119,16 @@ void set_on_board_red(led_state state) {
   led_state_red = state;
 }
 
+void flash_on_board_leds() {
+  set_on_board_red(ON);
+  set_on_board_green(ON);
+  set_on_board_yellow(ON);
+  _delay_ms(1000);
+  set_on_board_red(OFF);
+  set_on_board_green(OFF);
+  set_on_board_yellow(OFF);
+}
+
 uint32_t system_uptime() {
   cli();
   uint32_t cpy = uptime_ms;
