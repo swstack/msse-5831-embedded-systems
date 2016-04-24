@@ -9,7 +9,8 @@
 /************************************************
   Globals
 *************************************************/
-int encoder = 0;
+uint32_t encoder = 0;
+uint32_t encoder_frequency = 0;
 
 /************************************************
   Helplers
@@ -19,14 +20,12 @@ int duty_to_ocr(int duty) {
   return (duty * DUTY_MAX) / 100;;
 }
 
-void forward(int duty)
-{
+void forward(int duty) {
   PORTE |= _BV(PORTE2);
   OCR1B = duty_to_ocr(duty);
 }
 
-void reverse(int duty)
-{
+void reverse(int duty) {
   PORTE &= ~(_BV(PORTE2));
   OCR1B = duty_to_ocr(duty);
 }
@@ -59,13 +58,17 @@ void init_control_loop_timer() {
   TCNT0 = 0;
 }
 
+void init_serial() {
+  SetupHardware();
+  sei();
+}
+
 void init() {
   init_on_board_leds();
   init_control_loop_timer();
+  init_1000hz_timer_3();
   init_encoder();
   init_motor();
-  SetupHardware();
-  sei();
 }
 
 /************************************************
@@ -74,13 +77,16 @@ void init() {
 
 int main() {
 
+  init_serial();
+  initial_prompt();
+
   init();
   flash_on_board_leds();
-  // initial_prompt();
 
-  forward(100);
+  forward(75);
   while (1) {
     USB_Mainloop_Handler();
+    printf("Encoder: %lu (%lu)\r\n", encoder_frequency, uptime_ms);
   }
 
   return 0;
@@ -90,10 +96,14 @@ int main() {
   Interrupts
 *************************************************/
 
+ISR(TIMER3_COMPA_vect) {
+  // 1000hz uptime timer
+  uptime_ms++;
+}
+
 ISR(TIMER0_COMPA_vect) {
   // 1000hz control loop timer
 }
-
 
 ISR(PCINT0_vect) {
   // Pin change interrupt for encoder
@@ -101,6 +111,8 @@ ISR(PCINT0_vect) {
   // We need to capture the rising and falling edges of both encoder outputs in
   // order to count the 48 ticks per revolution of the drive shaft.
   //
+
+  encoder_frequency++;
 
   static uint8_t encoder_a = 0;
   static uint8_t encoder_b = 0;
@@ -110,7 +122,6 @@ ISR(PCINT0_vect) {
 
   if (encoder_a != tmp_encoder_a || encoder_b != tmp_encoder_b) {
     encoder++;
-    printf("Encoder: %d", encoder);
   }
 
   encoder_a = tmp_encoder_a;

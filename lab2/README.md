@@ -4,7 +4,7 @@
 
 * What is the degree accuracy of the encoder?
 
-> Well, since the encoder has a resolution of 48 counts per revolution of the motor shaft, and the gearbox multplies that encoder by an additional 48 you end up with 2304 ticks of the encoder for every revolution of the visible cylinder sticking out of the motor. This is, in my opinion, pretty accurate. For the sake of easy math, if you had only 5 ticks of the encoder you could have a margin of error of about 20%.
+> Encoder has a resolution of 2248.86 ticks per revolution. So in theory you could turn the motor .00045 of a revolution.
 
 * What is the minimum drive signal required to move your motor from a stopped position?
 
@@ -12,7 +12,13 @@
 
 * What is the approximate frequency of the encoder task (i.e. PCINT ISR) at 25% duty cycle and 75% duty cycle?
 
-> TODO
+**25% Duty Cycle:**
+
+> About 7 ticks of ISR per 5 milliseconds. Which is 1 tick per ~714 microseconds for a frequency of **~1396 hz**.
+
+**75% Duty Cycle:**
+
+> About 21 ticks of ISR per 5 milliseconds. Which is 1 tick per ~238 microseconds for a frequency of **~4201 hz**.
 
 * At what frequency of the PWM signal do you start to notice the “off” and “on” portions of the wave?
 
