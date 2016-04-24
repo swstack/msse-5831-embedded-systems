@@ -22,11 +22,15 @@
 
 * At what frequency of the PWM signal do you start to notice the “off” and “on” portions of the wave?
 
-> TODO
+> Somewhere around around 10 to 20hz.
 
 ## Implement the controller to maintain position.
 
-Use the information from the first exercises to set the frequency of the controller. It might be useful to do the following to tune your gains.
+Use the information from the first exercises to set the frequency of the controller.
+
+> At its fastest under no load, the motor will go about 150 RPMs (28 encoder ticks every 5ms). We will start with a control loop frequency of 1KHz (1ms)
+
+It might be useful to do the following to tune your gains.
 
 * Use only P. Start with a very low gain so that the motor runs very slowly and takes its time getting to the set position.
 * Increase the gain to get a fast response (i.e. get to your set point quickly). Then increase it a little more to oscillate.

@@ -38,9 +38,18 @@ void init_motor() {
   // Configure header pin 10 (motor) as output
   DDRB |= (1 << DDB6);
 
-  // Timer 1: phase-correct PWM mode, prescaler of 1
+  // Timer 1: phase-correct PWM mode
   TCCR1A |= (1 << COM1B1) | (1 << WGM11);
-  TCCR1B |= (1 << WGM13) | (1 << CS10);
+  TCCR1B |= (1 << WGM13);
+
+  // Prescaler settings, comment out as needed
+  TCCR1B |= (1 << CS10);                      // prescaler 1
+  // TCCR1B |= (1 << CS11);                      // prescaler 8
+  // TCCR1B |= (1 << CS11) | (1 << CS10);        // prescaler 64
+  // TCCR1B |= (1 << CS12);                      // prescaler 256
+  // TCCR1B |= (1 << CS12) | (1 << CS10);        // prescaler 1024
+
+  //
   ICR1 = DUTY_MAX;
 }
 
@@ -83,10 +92,9 @@ int main() {
   init();
   flash_on_board_leds();
 
-  forward(75);
+  forward(100);
   while (1) {
     USB_Mainloop_Handler();
-    printf("Encoder: %lu (%lu)\r\n", encoder_frequency, uptime_ms);
   }
 
   return 0;
@@ -103,6 +111,7 @@ ISR(TIMER3_COMPA_vect) {
 
 ISR(TIMER0_COMPA_vect) {
   // 1000hz control loop timer
+
 }
 
 ISR(PCINT0_vect) {
