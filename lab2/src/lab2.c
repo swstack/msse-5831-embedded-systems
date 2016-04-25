@@ -5,29 +5,56 @@
 #include <menu.h>
 
 #define DUTY_MAX 30000
+#define ENCODER_FULL_ROTATION 2249
 
 /************************************************
   Globals
 *************************************************/
+
+uint32_t encoder_frequency = 0;  // Not really used, just for testing
 uint32_t encoder = 0;
-uint32_t encoder_frequency = 0;
+uint32_t setpoint = 0;
+uint32_t error = 0;
 
 /************************************************
   Helplers
 *************************************************/
 
-int duty_to_ocr(int duty) {
-  return (duty * DUTY_MAX) / 100;;
+void set_duty(int percent) {
+  OCR1B = (percent * DUTY_MAX) / 100;
 }
 
-void forward(int duty) {
+void forward() {
   PORTE |= _BV(PORTE2);
-  OCR1B = duty_to_ocr(duty);
 }
 
-void reverse(int duty) {
+void reverse() {
   PORTE &= ~(_BV(PORTE2));
-  OCR1B = duty_to_ocr(duty);
+}
+
+void stop_motor() {
+  set_duty(0);
+}
+
+int encoder_ticks_for_degrees(int total_degrees) {
+  int total_encoder_ticks = 0;
+  int full_rotations = total_degrees / 360;
+  int partial_rotation = total_degrees % 360;
+  total_encoder_ticks += full_rotations * ENCODER_FULL_ROTATION;
+  total_encoder_ticks += ((uint32_t) ENCODER_FULL_ROTATION * partial_rotation) / 360;
+  return total_encoder_ticks;
+}
+
+void forward_degrees(int x, int y) {
+  // Go forward X degrees, Y times
+  forward();
+  encoder_ticks_for_degrees(x * y);
+}
+
+void reverse_degrees(int x, int y) {
+  // Go reverse X degrees, Y times
+  reverse();
+  encoder_ticks_for_degrees(x * y);
 }
 
 /************************************************
@@ -49,7 +76,6 @@ void init_motor() {
   // TCCR1B |= (1 << CS12);                      // prescaler 256
   // TCCR1B |= (1 << CS12) | (1 << CS10);        // prescaler 1024
 
-  //
   ICR1 = DUTY_MAX;
 }
 
@@ -61,8 +87,8 @@ void init_encoder() {
 
 void init_control_loop_timer() {
   TCCR0A = _BV(WGM01);
-  TCCR0B = _BV(CS02) | _BV(CS00);  // prescaler 64
-  OCR0A = 255;
+  TCCR0B = (1 << CS00) | (1 << CS01) | (1 << WGM02);
+  OCR0A = 250;
   TIMSK0 = _BV(OCIE0A);
   TCNT0 = 0;
 }
@@ -84,6 +110,16 @@ void init() {
   Main
 *************************************************/
 
+void interpolator() {
+  set_duty(10);
+
+  forward_degrees(90, 1);
+  _delay_ms(500);
+  reverse_degrees(360, 1);
+  _delay_ms(500);
+  forward_degrees(5, 1);
+}
+
 int main() {
 
   init_serial();
@@ -92,7 +128,8 @@ int main() {
   init();
   flash_on_board_leds();
 
-  forward(100);
+  interpolator();
+
   while (1) {
     USB_Mainloop_Handler();
   }
@@ -112,6 +149,10 @@ ISR(TIMER3_COMPA_vect) {
 ISR(TIMER0_COMPA_vect) {
   // 1000hz control loop timer
 
+  error = setpoint - encoder;
+  if (error == 0) {
+    stop_motor();
+  }
 }
 
 ISR(PCINT0_vect) {
@@ -129,8 +170,12 @@ ISR(PCINT0_vect) {
   uint8_t tmp_encoder_a = (PINB & _BV(PB4)) ? 1 : 0;
   uint8_t tmp_encoder_b = (PINB & _BV(PB5)) ? 1 : 0;
 
-  if (encoder_a != tmp_encoder_a || encoder_b != tmp_encoder_b) {
+  if (encoder_a ^ tmp_encoder_a) {
     encoder++;
+  }
+
+  if (encoder_b ^ tmp_encoder_b) {
+    encoder--;
   }
 
   encoder_a = tmp_encoder_a;
