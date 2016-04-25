@@ -28,7 +28,7 @@
 
 Use the information from the first exercises to set the frequency of the controller.
 
-> At its fastest under no load, the motor will go about 150 RPMs (28 encoder ticks every 5ms). We will start with a control loop frequency of 1KHz (1ms)
+> At its fastest under no load, the motor will go about 150 RPMs (28 encoder ticks every 5ms). We will start with a control loop frequency of 1KHz (1ms).
 
 It might be useful to do the following to tune your gains.
 
@@ -63,6 +63,29 @@ Using your tuned gains (i.e. those that achieve good control while maintaining g
 * rotate in reverse for 360 degrees
 * hold for .5 seconds
 * rotate forwards for 5 degrees
+
+Output from application:
+
+```
+Press any key to continue...
+Starting new Motor Instruction (0)...
+New direction: Forward
+New setpoint: 562, Current Error: 562
+Motor Instruction (0) complete!
+Starting new Delay Instruction (1)...
+Delay Instruction (1) complete!
+Starting new Motor Instruction (2)...
+New direction: Reverse
+New setpoint: -2249, Current Error: -2249
+Motor Instruction (2) complete!
+Starting new Delay Instruction (3)...
+Delay Instruction (3) complete!
+Starting new Motor Instruction (4)...
+New direction: Forward
+New setpoint: 31, Current Error: 31
+Motor Instruction (4) complete!
+Done!
+```
 
 ## Graph Pm, Pr and T that was recorded while executing the trajectory.
 
