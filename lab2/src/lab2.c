@@ -2,6 +2,7 @@
 #include <VirtualSerial.h>
 #include <stdlib.h>
 #include <common.h>
+#include <stdbool.h>
 #include <menu.h>
 
 #define DUTY_MAX 30000
@@ -12,9 +13,13 @@
 *************************************************/
 
 uint32_t encoder_frequency = 0;  // Not really used, just for testing
-uint32_t encoder = 0;
-uint32_t setpoint = 0;
+int32_t encoder = 0;
+int32_t setpoint = 0;
 uint32_t error = 0;
+bool motor_instruction_running = false;
+bool delay_instruction_running = false;
+int current_instruction = 0;
+uint32_t delay_uptime = 0;
 
 /************************************************
   Helplers
@@ -25,36 +30,24 @@ void set_duty(int percent) {
 }
 
 void forward() {
-  PORTE |= _BV(PORTE2);
+  PORTE &= ~(_BV(PORTE2));
 }
 
 void reverse() {
-  PORTE &= ~(_BV(PORTE2));
+  PORTE |= _BV(PORTE2);
 }
 
 void stop_motor() {
   set_duty(0);
 }
 
-int encoder_ticks_for_degrees(int total_degrees) {
+int setpoint_for_degrees(int total_degrees) {
   int total_encoder_ticks = 0;
   int full_rotations = total_degrees / 360;
   int partial_rotation = total_degrees % 360;
   total_encoder_ticks += full_rotations * ENCODER_FULL_ROTATION;
   total_encoder_ticks += ((uint32_t) ENCODER_FULL_ROTATION * partial_rotation) / 360;
   return total_encoder_ticks;
-}
-
-void forward_degrees(int x, int y) {
-  // Go forward X degrees, Y times
-  forward();
-  encoder_ticks_for_degrees(x * y);
-}
-
-void reverse_degrees(int x, int y) {
-  // Go reverse X degrees, Y times
-  reverse();
-  encoder_ticks_for_degrees(x * y);
 }
 
 /************************************************
@@ -110,14 +103,78 @@ void init() {
   Main
 *************************************************/
 
-void interpolator() {
-  set_duty(10);
+void handle_instruction(int index, int instruction_data) {
+  // If the index is an even number, the instruction is a motor setpoint. If
+  // the index is odd, the instruction is a delay.
 
-  forward_degrees(90, 1);
-  _delay_ms(500);
-  reverse_degrees(360, 1);
-  _delay_ms(500);
-  forward_degrees(5, 1);
+  if (index % 2 == 0) {
+    // Handle Motor Instruction
+
+    if (motor_instruction_running == false) {
+      printf("Starting new Motor Instruction (%d)...\r\n", index);
+
+      motor_instruction_running = true;
+      setpoint = instruction_data;
+      encoder = 0;
+
+      if (setpoint > 0) {
+        printf("New direction: Forward\r\n");
+        forward();
+      } else {
+        printf("New direction: Reverse\r\n");
+        reverse();
+      }
+
+      printf("New setpoint: %ld, Current Error: %ld\r\n", setpoint, error);
+    } else {
+
+      if (error == 0) {
+        printf("Motor Instruction (%d) complete!\r\n", index);
+
+        setpoint = 0;
+        motor_instruction_running = false;
+        current_instruction++;
+      }
+
+    }
+
+  } else {
+    // Handle Delay Instruction
+
+    if (delay_instruction_running == false) {
+      printf("Starting new Delay Instruction (%d)...\r\n", index);
+
+      delay_instruction_running = true;
+      delay_uptime = uptime_ms + instruction_data;
+
+    } else {
+      int diff = delay_uptime - uptime_ms;
+      if (diff < 0) {
+        printf("Delay Instruction (%d) complete!\r\n", index);
+
+        delay_instruction_running = false;
+        current_instruction++;
+      }
+    }
+
+  }
+}
+
+int* interpolator() {
+  // Return a set of instructions for the main loop to execute
+  //
+  // Instructions are in the form of an array where each element in the array
+  // is an integer. Elements with an even index are motor setpoints and elements
+  // with an odd index are delays in milliseconds.
+  //
+
+  static int instructions[] = {0, 0, 0, 0, 0};
+  instructions[0] = setpoint_for_degrees(90);            // Forward 90
+  instructions[1] = 500;                                 // Delay 500ms
+  instructions[2] = 0 - setpoint_for_degrees(360);       // Reverse 360
+  instructions[3] = 500;                                 // Delay 500ms
+  instructions[4] = setpoint_for_degrees(5);
+  return instructions;
 }
 
 int main() {
@@ -128,12 +185,27 @@ int main() {
   init();
   flash_on_board_leds();
 
-  interpolator();
+  int *instructions;
+  instructions = interpolator();
 
   while (1) {
+
+    // Handle serial comms
     USB_Mainloop_Handler();
+
+    if (current_instruction > 4) {
+      // There are only 5 instructions
+      printf("Done!\r\n");
+      stop_motor();
+      break;
+    }
+
+    // Handle motor
+    handle_instruction(current_instruction, instructions[current_instruction]);
+
   }
 
+  USB_Mainloop_Handler();
   return 0;
 }
 
@@ -142,17 +214,19 @@ int main() {
 *************************************************/
 
 ISR(TIMER3_COMPA_vect) {
-  // 1000hz uptime timer
+  // Uptime (1000hz)
+
   uptime_ms++;
 }
 
 ISR(TIMER0_COMPA_vect) {
-  // 1000hz control loop timer
+  // PD control loop timer (1000hz)
 
   error = setpoint - encoder;
-  if (error == 0) {
-    stop_motor();
+  if (error != 0) {
+    set_duty(10);
   }
+
 }
 
 ISR(PCINT0_vect) {
@@ -170,11 +244,9 @@ ISR(PCINT0_vect) {
   uint8_t tmp_encoder_a = (PINB & _BV(PB4)) ? 1 : 0;
   uint8_t tmp_encoder_b = (PINB & _BV(PB5)) ? 1 : 0;
 
-  if (encoder_a ^ tmp_encoder_a) {
+  if (tmp_encoder_a ^ encoder_b) {
     encoder++;
-  }
-
-  if (encoder_b ^ tmp_encoder_b) {
+  } else if (tmp_encoder_b ^ encoder_a) {
     encoder--;
   }
 
