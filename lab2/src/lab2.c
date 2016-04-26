@@ -24,6 +24,7 @@ typedef struct {
 // Debugging/testing stuff
 uint32_t encoder_frequency = 0;
 
+
 // Motor state
 int32_t encoder = 0;
 int32_t setpoint = 0;
@@ -158,7 +159,7 @@ int setpoint_for_degrees(int total_degrees) {
 void log_pid_values() {
 
   // Log every 200 milliseconds
-  if (log_timer >= 200) {
+  if (log_timer >= 50) {
     log_timer = 0;
 
     printf("[%lu] Setpoint: %ld, Error: %ld, Torque: %lu\r\n", uptime_ms, setpoint, error, torque);
@@ -361,8 +362,8 @@ int main() {
 
   instruction_t instructions[5];
 
-  // int instruction_count = interpolator(instructions);
-  int instruction_count = two_full_rotations(instructions);
+  int instruction_count = interpolator(instructions);
+  // int instruction_count = two_full_rotations(instructions);
 
   while (1) {
 
