@@ -34,22 +34,41 @@ uint32_t delay_uptime = 0;
 *************************************************/
 
 void set_duty(int percent) {
+  // Set the duty cycle given a percent 1-100. This effectively changes the
+  // speed of the motor.
+  //
+
   OCR1B = (percent * DUTY_MAX) / 100;
 }
 
 void forward() {
+  // Tell the motor to go forward
+  //
+
   PORTE &= ~(_BV(PORTE2));
 }
 
 void reverse() {
+  // Tell the motor to go reverse
+  //
+
   PORTE |= _BV(PORTE2);
 }
 
 void stop_motor() {
+  // Stop the motor
+  //
+
   set_duty(0);
 }
 
 int setpoint_for_degrees(int total_degrees) {
+  // Translate degrees (rotations) into a setpoint
+  //
+  // A setpoint is an integer that defines the allowable number of encoder
+  // "ticks" that may occur until the setpoint has been reached.
+  //
+
   int total_encoder_ticks = 0;
   int full_rotations = total_degrees / 360;
   int partial_rotation = total_degrees % 360;
@@ -63,6 +82,9 @@ int setpoint_for_degrees(int total_degrees) {
 *************************************************/
 
 void init_motor() {
+  // Initialize the PWM signal that controls the motor duty cycle
+  //
+
   // Configure header pin 10 (motor) as output
   DDRB |= (1 << DDB6);
 
@@ -81,12 +103,18 @@ void init_motor() {
 }
 
 void init_encoder() {
+  // Initialize the pin change interrupt that the encoder loop requires
+  //
+
   DDRD &= ~(_BV(DDB4) | _BV(DDB5));
   PCMSK0 = _BV(PCINT5) | _BV(PCINT4);
   PCICR =_BV(PCIE0);
 }
 
 void init_control_loop_timer() {
+  // Initialize a timer interrupt that will act as the PID control loop
+  //
+
   TCCR0A = _BV(WGM01);
   TCCR0B = (1 << CS00) | (1 << CS01) | (1 << WGM02);
   OCR0A = 250;
@@ -95,11 +123,17 @@ void init_control_loop_timer() {
 }
 
 void init_serial() {
+  // Initialize the lufa library
+  //
+
   SetupHardware();
   sei();
 }
 
 void init() {
+  // Initialize the system
+  //
+
   init_on_board_leds();
   init_control_loop_timer();
   init_1000hz_timer_3();
@@ -111,6 +145,9 @@ void init() {
   Main
 *************************************************/
 void handle_delay(int index, int target_delay) {
+  // Start or handle a delay instruction, called from the main loop
+  //
+
   if (delay_instruction_running == false) {
       printf("Starting new Delay Instruction (%d)...\r\n", index);
 
@@ -130,6 +167,9 @@ void handle_delay(int index, int target_delay) {
 
 
 void handle_motor(int index, int target_setpoint) {
+  // Start or handle a motor instruction, called from the main loop
+  //
+
   if (motor_instruction_running == false) {
     printf("Starting new Motor Instruction (%d)...\r\n", index);
 
@@ -162,6 +202,7 @@ void handle_motor(int index, int target_setpoint) {
 void handle_instruction(int index, instruction_t instruction) {
   // If the index is an even number, the instruction is a motor setpoint. If
   // the index is odd, the instruction is a delay.
+  //
 
   switch(instruction.type) {
 
@@ -181,6 +222,9 @@ void handle_instruction(int index, instruction_t instruction) {
 }
 
 void make_instruction(instruction_t *in, int instruction_type, int instruction_data) {
+  // Given an instruction pointer, type and data, create an instruction
+  //
+
   in->type = instruction_type;
   in->data = instruction_data;
 }
@@ -202,6 +246,8 @@ void interpolator(instruction_t *instructions) {
 }
 
 int main() {
+  // Main loop
+  //
 
   init_serial();
   initial_prompt();
@@ -239,12 +285,14 @@ int main() {
 
 ISR(TIMER3_COMPA_vect) {
   // Uptime (1000hz)
+  //
 
   uptime_ms++;
 }
 
 ISR(TIMER0_COMPA_vect) {
   // PD control loop timer (1000hz)
+  //
 
   error = setpoint - encoder;
   if (error != 0) {
