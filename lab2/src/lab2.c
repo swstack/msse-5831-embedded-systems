@@ -22,10 +22,15 @@ typedef struct {
 
 uint32_t encoder_frequency = 0;  // Not really used, just for testing
 int32_t encoder = 0;
+
+// Motor state
 int32_t setpoint = 0;
 int32_t error = 0;
+int zero_error_counter = 0;
+bool position_good = false;
 bool motor_instruction_running = false;
 bool delay_instruction_running = false;
+
 int current_instruction = 0;
 uint32_t delay_uptime = 0;
 
@@ -74,12 +79,22 @@ void update_pid() {
     forward();
   } else if (error < 0) {
     reverse();
+  } else {
+    zero_error_counter++;
   }
 
-  // Handle torque/duty
-  if (error != 0) {
-    set_duty(10);
+  // Debouncing! Make sure the error is zero for an extended period of time
+  if (zero_error_counter > 10) {
+    position_good = true;
+
+  } else {
+
+    // Handle torque/duty
+    if (error != 0) {
+      set_duty(100);
+    }
   }
+
 
 }
 
@@ -195,6 +210,8 @@ void handle_motor(int target_setpoint) {
 
   if (motor_instruction_running == false) {
 
+    position_good = false;
+    zero_error_counter = 0;
     encoder = 0;
     setpoint = target_setpoint;
     error = setpoint - encoder;
@@ -205,7 +222,7 @@ void handle_motor(int target_setpoint) {
 
   } else {
 
-    if (error == 0) {
+    if (position_good == true) {
 
       printf("Motor Instruction complete!\r\n");
       motor_instruction_running = false;
