@@ -199,13 +199,23 @@ void init_encoder() {
   PCICR =_BV(PCIE0);
 }
 
-void init_control_loop_timer() {
+void init_control_loop_timer_slow() {
+  // For experimental use only, roughly 5hz
+
+  TCCR3A = _BV(WGM31);
+  TCCR3B = (1 << CS30) | (1 << CS32) | (1 << WGM32);
+  OCR3A = 4000;
+  TIMSK3 = _BV(OCIE3A);
+  TCNT3 = 0;
+
+}
+
+void init_control_loop_timer_normal() {
   // Initialize a timer interrupt that will act as the PID control loop
   //
 
   TCCR3A = _BV(WGM31);
   TCCR3B = (1 << CS30) | (1 << CS31) | (1 << WGM32);
-  // TCCR3B = (1 << CS31) | (1 << CS32) | (1 << WGM32);
   OCR3A = 250;
   TIMSK3 = _BV(OCIE3A);
   TCNT3 = 0;
@@ -224,7 +234,8 @@ void init() {
   //
 
   init_on_board_leds();
-  init_control_loop_timer();
+  init_control_loop_timer_normal();
+  // init_control_loop_timer_slow();
   init_1000hz_timer_0();
   init_encoder();
   init_motor();
@@ -333,6 +344,11 @@ int interpolator(instruction_t *instructions) {
   return 5;
 }
 
+int two_full_rotations(instruction_t *instructions) {
+  make_instruction(&instructions[0], INSTRUCTION_TYPE_MOTOR, setpoint_for_degrees(720));
+  return 1;
+}
+
 int main() {
   // Main loop
   //
@@ -344,7 +360,9 @@ int main() {
   flash_on_board_leds();
 
   instruction_t instructions[5];
-  int instruction_count = interpolator(instructions);
+
+  // int instruction_count = interpolator(instructions);
+  int instruction_count = two_full_rotations(instructions);
 
   while (1) {
 
