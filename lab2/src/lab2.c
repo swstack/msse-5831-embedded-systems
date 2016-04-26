@@ -21,7 +21,8 @@ typedef struct {
   Globals
 *************************************************/
 
-uint32_t encoder_frequency = 0;  // Not really used, just for testing
+// Debugging/testing stuff
+uint32_t encoder_frequency = 0;
 
 // Motor state
 int32_t encoder = 0;
@@ -32,17 +33,26 @@ int zero_error_counter = 0;
 bool position_good = false;
 bool motor_instruction_running = false;
 bool delay_instruction_running = false;
+uint32_t torque = 0;
+int ocr_value;
 
 // Gains
-int kp = 30;
-int kd = 10;
+int kp_high = 200;
+int kd_high = 100;
+
+int kp_ideal = 60;
+int kd_ideal = 30;
+
+int kp_low = 10;
+int kd_low = 2;
 
 // Instruction state
 bool instructions_complete = false;
 int current_instruction = 0;
 
-// Delay state
+// Time state
 uint32_t delay_uptime = 0;
+uint16_t log_timer = 0;
 
 /************************************************
   Helplers
@@ -50,7 +60,6 @@ uint32_t delay_uptime = 0;
 
 void set_duty_raw(uint32_t raw_ocr) {
 
-  int ocr_value;
   if (raw_ocr >= OCR_MAX) {
     ocr_value = OCR_MAX;
   } else if (raw_ocr <= OCR_MIN) {
@@ -117,8 +126,10 @@ void update_pid() {
 
     // Handle torque/duty
     if (error != 0) {
-      // uint32_t torque = abs(kp * error);
-      uint32_t torque = (abs(kp * error)) - (kd * (error - last_error));
+      int kp = kp_ideal;
+      int kd = kd_ideal;
+      // torque = labs((uint32_t) kp * error);
+      torque = (labs((uint32_t) kp * error)) - (kd * (error - last_error));
       set_duty_raw(torque);
     } else {
       set_duty_percent(0);
@@ -142,6 +153,16 @@ int setpoint_for_degrees(int total_degrees) {
   total_encoder_ticks += full_rotations * ENCODER_FULL_ROTATION;
   total_encoder_ticks += ((uint32_t) ENCODER_FULL_ROTATION * partial_rotation) / 360;
   return total_encoder_ticks;
+}
+
+void log_pid_values() {
+
+  // Log every 200 milliseconds
+  if (log_timer >= 200) {
+    log_timer = 0;
+
+    printf("[%lu] Setpoint: %ld, Error: %ld, Torque: %lu\r\n", uptime_ms, setpoint, error, torque);
+  }
 }
 
 /************************************************
@@ -182,11 +203,12 @@ void init_control_loop_timer() {
   // Initialize a timer interrupt that will act as the PID control loop
   //
 
-  TCCR0A = _BV(WGM01);
-  TCCR0B = (1 << CS00) | (1 << CS01) | (1 << WGM02);
-  OCR0A = 250;
-  TIMSK0 = _BV(OCIE0A);
-  TCNT0 = 0;
+  TCCR3A = _BV(WGM31);
+  TCCR3B = (1 << CS30) | (1 << CS31) | (1 << WGM32);
+  // TCCR3B = (1 << CS31) | (1 << CS32) | (1 << WGM32);
+  OCR3A = 250;
+  TIMSK3 = _BV(OCIE3A);
+  TCNT3 = 0;
 }
 
 void init_serial() {
@@ -203,7 +225,7 @@ void init() {
 
   init_on_board_leds();
   init_control_loop_timer();
-  init_1000hz_timer_3();
+  init_1000hz_timer_0();
   init_encoder();
   init_motor();
 }
@@ -234,7 +256,6 @@ void handle_delay(int target_delay) {
     }
 }
 
-
 void handle_motor(int target_setpoint) {
   // Start or handle a motor instruction, called from the main loop
   //
@@ -246,7 +267,7 @@ void handle_motor(int target_setpoint) {
     // encoder = 0;
     setpoint += target_setpoint;
     error = setpoint - encoder;
-    printf("Starting new Motor Instruction (Setpoint = %ld) (Error = %ld)\r\n", setpoint, error);
+    printf("Starting new Motor Instruction...\r\n");
 
     // Start the motor!
     motor_instruction_running = true;
@@ -260,8 +281,9 @@ void handle_motor(int target_setpoint) {
 
       current_instruction++;
     }
-
   }
+
+  log_pid_values();
 }
 
 void handle_instruction(instruction_t instruction) {
@@ -279,7 +301,7 @@ void handle_instruction(instruction_t instruction) {
       break;
 
     default :
-      printf("Unknown instruction type: %d", instruction.type);
+      printf("Unknown instruction type: %d\r\n", instruction.type);
       break;
   }
 
@@ -293,8 +315,8 @@ void make_instruction(instruction_t *in, int instruction_type, int instruction_d
   in->data = instruction_data;
 }
 
-void interpolator(instruction_t *instructions) {
-  // Fill the instructions array with instructions
+int interpolator(instruction_t *instructions) {
+  // Fill the instructions array with instructions, return the # of instructions
   //
   // Instructions are defined as type instruction_t with a "type" and "data".
   // There are currently only two types of instructions, "delay" and "motor".
@@ -307,6 +329,8 @@ void interpolator(instruction_t *instructions) {
   make_instruction(&instructions[2], INSTRUCTION_TYPE_MOTOR, 0 - setpoint_for_degrees(360));
   make_instruction(&instructions[3], INSTRUCTION_TYPE_DELAY, 2000);
   make_instruction(&instructions[4], INSTRUCTION_TYPE_MOTOR, setpoint_for_degrees(5));
+
+  return 5;
 }
 
 int main() {
@@ -320,14 +344,14 @@ int main() {
   flash_on_board_leds();
 
   instruction_t instructions[5];
-  interpolator(instructions);
+  int instruction_count = interpolator(instructions);
 
   while (1) {
 
     // Handle serial comms
     USB_Mainloop_Handler();
 
-    if (current_instruction > 4) {
+    if (current_instruction > (instruction_count - 1)) {
       if (instructions_complete == false) {
         printf("All instructions complete!\r\n");
         instructions_complete = true;
@@ -347,17 +371,17 @@ int main() {
 *************************************************/
 
 ISR(TIMER3_COMPA_vect) {
+  // PD control loop timer (1000hz)
+  //
+  update_pid();
+}
+
+ISR(TIMER0_COMPA_vect) {
   // Uptime (1000hz)
   //
 
   uptime_ms++;
-}
-
-ISR(TIMER0_COMPA_vect) {
-  // PD control loop timer (1000hz)
-  //
-
-  update_pid();
+  log_timer++;
 }
 
 ISR(PCINT0_vect) {
