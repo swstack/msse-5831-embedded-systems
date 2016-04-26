@@ -5,7 +5,8 @@
 #include <stdbool.h>
 #include <menu.h>
 
-#define DUTY_MAX 30000
+#define OCR_MAX 30000
+#define OCR_MIN 2000
 #define ENCODER_FULL_ROTATION 2249
 
 #define INSTRUCTION_TYPE_DELAY 11
@@ -21,9 +22,9 @@ typedef struct {
 *************************************************/
 
 uint32_t encoder_frequency = 0;  // Not really used, just for testing
-int32_t encoder = 0;
 
 // Motor state
+int32_t encoder = 0;
 int32_t setpoint = 0;
 int32_t error = 0;
 int zero_error_counter = 0;
@@ -31,19 +32,50 @@ bool position_good = false;
 bool motor_instruction_running = false;
 bool delay_instruction_running = false;
 
+// Gains
+int kp = 0;
+int kd = 0;
+
+// Instruction state
+bool instructions_complete = false;
 int current_instruction = 0;
+
+// Delay state
 uint32_t delay_uptime = 0;
 
 /************************************************
   Helplers
 *************************************************/
 
-void set_duty(int percent) {
+void set_duty_raw(int raw_ocr) {
+
+  int ocr_value;
+  if (raw_ocr >= OCR_MAX) {
+    ocr_value = OCR_MAX;
+  } else if (raw_ocr <= OCR_MIN) {
+    ocr_value = OCR_MIN;
+  } else {
+    ocr_value = raw_ocr;
+  }
+
+  OCR1B = ocr_value;
+}
+
+void set_duty_percent(int percent) {
   // Set the duty cycle given a percent 1-100. This effectively changes the
   // speed of the motor.
   //
 
-  OCR1B = (percent * DUTY_MAX) / 100;
+  int ocr_value;
+  if (percent >= 100) {
+    ocr_value = OCR_MAX;
+  } else if (percent <= 0) {
+    ocr_value = 0;
+  } else {
+    ocr_value = (percent * OCR_MAX) / 100;
+  }
+
+  OCR1B = ocr_value;
 }
 
 void forward() {
@@ -58,13 +90,6 @@ void reverse() {
   //
 
   PORTE |= _BV(PORTE2);
-}
-
-void stop_motor() {
-  // Stop the motor
-  //
-
-  set_duty(0);
 }
 
 void update_pid() {
@@ -91,10 +116,12 @@ void update_pid() {
 
     // Handle torque/duty
     if (error != 0) {
-      set_duty(100);
+      kp = 30;
+      set_duty_raw(abs(kp * error));
+    } else {
+      set_duty_percent(0);
     }
   }
-
 
 }
 
@@ -135,7 +162,7 @@ void init_motor() {
   // TCCR1B |= (1 << CS12);                      // prescaler 256
   // TCCR1B |= (1 << CS12) | (1 << CS10);        // prescaler 1024
 
-  ICR1 = DUTY_MAX;
+  ICR1 = OCR_MAX;
 }
 
 void init_encoder() {
@@ -212,8 +239,8 @@ void handle_motor(int target_setpoint) {
 
     position_good = false;
     zero_error_counter = 0;
-    encoder = 0;
-    setpoint = target_setpoint;
+    // encoder = 0;
+    setpoint += target_setpoint;
     error = setpoint - encoder;
     printf("Starting new Motor Instruction (Setpoint = %ld) (Error = %ld)\r\n", setpoint, error);
 
@@ -226,9 +253,6 @@ void handle_motor(int target_setpoint) {
 
       printf("Motor Instruction complete!\r\n");
       motor_instruction_running = false;
-
-      setpoint = 0;
-      stop_motor();
 
       current_instruction++;
     }
@@ -300,18 +324,17 @@ int main() {
     USB_Mainloop_Handler();
 
     if (current_instruction > 4) {
-      // There are only 5 instructions
-      printf("Done!\r\n");
-      stop_motor();
-      break;
-    }
+      if (instructions_complete == false) {
+        printf("All instructions complete!\r\n");
+        instructions_complete = true;
+      }
 
-    // Handle motor
-    handle_instruction(instructions[current_instruction]);
+    } else {
+      handle_instruction(instructions[current_instruction]);
+    }
 
   }
 
-  USB_Mainloop_Handler();
   return 0;
 }
 
@@ -330,9 +353,7 @@ ISR(TIMER0_COMPA_vect) {
   // PD control loop timer (1000hz)
   //
 
-  if (motor_instruction_running) {
-    update_pid();
-  }
+  update_pid();
 }
 
 ISR(PCINT0_vect) {
@@ -344,20 +365,19 @@ ISR(PCINT0_vect) {
 
   encoder_frequency++;  // For testing purposes only
 
-  if (motor_instruction_running) {
-    static uint8_t encoder_a = 0;
-    static uint8_t encoder_b = 0;
+  static uint8_t encoder_a = 0;
+  static uint8_t encoder_b = 0;
 
-    uint8_t tmp_encoder_a = (PINB & _BV(PB4)) ? 1 : 0;
-    uint8_t tmp_encoder_b = (PINB & _BV(PB5)) ? 1 : 0;
+  uint8_t tmp_encoder_a = (PINB & _BV(PB4)) ? 1 : 0;
+  uint8_t tmp_encoder_b = (PINB & _BV(PB5)) ? 1 : 0;
 
-    if (tmp_encoder_a ^ encoder_b) {
-      encoder++;
-    } else if (tmp_encoder_b ^ encoder_a) {
-      encoder--;
-    }
-
-    encoder_a = tmp_encoder_a;
-    encoder_b = tmp_encoder_b;
+  if (tmp_encoder_a ^ encoder_b) {
+    encoder++;
+  } else if (tmp_encoder_b ^ encoder_a) {
+    encoder--;
   }
+
+  encoder_a = tmp_encoder_a;
+  encoder_b = tmp_encoder_b;
+
 }
