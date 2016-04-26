@@ -27,14 +27,15 @@ uint32_t encoder_frequency = 0;  // Not really used, just for testing
 int32_t encoder = 0;
 int32_t setpoint = 0;
 int32_t error = 0;
+int32_t last_error = 0;
 int zero_error_counter = 0;
 bool position_good = false;
 bool motor_instruction_running = false;
 bool delay_instruction_running = false;
 
 // Gains
-int kp = 0;
-int kd = 0;
+int kp = 30;
+int kd = 10;
 
 // Instruction state
 bool instructions_complete = false;
@@ -47,7 +48,7 @@ uint32_t delay_uptime = 0;
   Helplers
 *************************************************/
 
-void set_duty_raw(int raw_ocr) {
+void set_duty_raw(uint32_t raw_ocr) {
 
   int ocr_value;
   if (raw_ocr >= OCR_MAX) {
@@ -55,7 +56,7 @@ void set_duty_raw(int raw_ocr) {
   } else if (raw_ocr <= OCR_MIN) {
     ocr_value = OCR_MIN;
   } else {
-    ocr_value = raw_ocr;
+    ocr_value = (int) raw_ocr;
   }
 
   OCR1B = ocr_value;
@@ -116,12 +117,15 @@ void update_pid() {
 
     // Handle torque/duty
     if (error != 0) {
-      kp = 30;
-      set_duty_raw(abs(kp * error));
+      // uint32_t torque = abs(kp * error);
+      uint32_t torque = (abs(kp * error)) - (kd * (error - last_error));
+      set_duty_raw(torque);
     } else {
       set_duty_percent(0);
     }
   }
+
+  last_error = error;
 
 }
 
