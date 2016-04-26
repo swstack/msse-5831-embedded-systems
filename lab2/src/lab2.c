@@ -23,7 +23,7 @@ typedef struct {
 uint32_t encoder_frequency = 0;  // Not really used, just for testing
 int32_t encoder = 0;
 int32_t setpoint = 0;
-uint32_t error = 0;
+int32_t error = 0;
 bool motor_instruction_running = false;
 bool delay_instruction_running = false;
 int current_instruction = 0;
@@ -60,6 +60,27 @@ void stop_motor() {
   //
 
   set_duty(0);
+}
+
+void update_pid() {
+  // Logic for the PID controller, manages direction and torque of motor
+  //
+
+  // Calculate error
+  error = setpoint - encoder;
+
+  // Handle direction
+  if (error > 0) {
+    forward();
+  } else if (error < 0) {
+    reverse();
+  }
+
+  // Handle torque/duty
+  if (error != 0) {
+    set_duty(10);
+  }
+
 }
 
 int setpoint_for_degrees(int total_degrees) {
@@ -144,74 +165,72 @@ void init() {
 /************************************************
   Main
 *************************************************/
-void handle_delay(int index, int target_delay) {
+void handle_delay(int target_delay) {
   // Start or handle a delay instruction, called from the main loop
   //
 
   if (delay_instruction_running == false) {
-      printf("Starting new Delay Instruction (%d)...\r\n", index);
+      printf("Starting new Delay Instruction (%dms)...\r\n", target_delay);
 
-      delay_instruction_running = true;
       delay_uptime = uptime_ms + target_delay;
+      delay_instruction_running = true;
 
     } else {
+
       int diff = delay_uptime - uptime_ms;
       if (diff < 0) {
-        printf("Delay Instruction (%d) complete!\r\n", index);
 
+        printf("Delay Instruction complete!\r\n");
         delay_instruction_running = false;
+
         current_instruction++;
       }
     }
 }
 
 
-void handle_motor(int index, int target_setpoint) {
+void handle_motor(int target_setpoint) {
   // Start or handle a motor instruction, called from the main loop
   //
 
   if (motor_instruction_running == false) {
-    printf("Starting new Motor Instruction (%d)...\r\n", index);
 
-    motor_instruction_running = true;
-    setpoint = target_setpoint;
     encoder = 0;
+    setpoint = target_setpoint;
+    error = setpoint - encoder;
+    printf("Starting new Motor Instruction (Setpoint = %ld) (Error = %ld)\r\n", setpoint, error);
 
-    if (setpoint > 0) {
-      printf("New direction: Forward\r\n");
-      forward();
-    } else {
-      printf("New direction: Reverse\r\n");
-      reverse();
-    }
+    // Start the motor!
+    motor_instruction_running = true;
 
-    printf("New setpoint: %ld, Current Error: %ld\r\n", setpoint, error);
   } else {
 
     if (error == 0) {
-      printf("Motor Instruction (%d) complete!\r\n", index);
+
+      printf("Motor Instruction complete!\r\n");
+      motor_instruction_running = false;
 
       setpoint = 0;
-      motor_instruction_running = false;
+      stop_motor();
+
       current_instruction++;
     }
 
   }
 }
 
-void handle_instruction(int index, instruction_t instruction) {
-  // If the index is an even number, the instruction is a motor setpoint. If
-  // the index is odd, the instruction is a delay.
+void handle_instruction(instruction_t instruction) {
+  // Handle the current instruction
   //
 
   switch(instruction.type) {
 
     case INSTRUCTION_TYPE_MOTOR :
-      handle_motor(index, instruction.data);
+      handle_motor(instruction.data);
       break;
 
     case INSTRUCTION_TYPE_DELAY :
-      handle_delay(index, instruction.data);
+      handle_delay(instruction.data);
       break;
 
     default :
@@ -239,9 +258,9 @@ void interpolator(instruction_t *instructions) {
   //
 
   make_instruction(&instructions[0], INSTRUCTION_TYPE_MOTOR, setpoint_for_degrees(90));
-  make_instruction(&instructions[1], INSTRUCTION_TYPE_DELAY, 500);
+  make_instruction(&instructions[1], INSTRUCTION_TYPE_DELAY, 2000);
   make_instruction(&instructions[2], INSTRUCTION_TYPE_MOTOR, 0 - setpoint_for_degrees(360));
-  make_instruction(&instructions[3], INSTRUCTION_TYPE_DELAY, 500);
+  make_instruction(&instructions[3], INSTRUCTION_TYPE_DELAY, 2000);
   make_instruction(&instructions[4], INSTRUCTION_TYPE_MOTOR, setpoint_for_degrees(5));
 }
 
@@ -271,7 +290,7 @@ int main() {
     }
 
     // Handle motor
-    handle_instruction(current_instruction, instructions[current_instruction]);
+    handle_instruction(instructions[current_instruction]);
 
   }
 
@@ -294,11 +313,9 @@ ISR(TIMER0_COMPA_vect) {
   // PD control loop timer (1000hz)
   //
 
-  error = setpoint - encoder;
-  if (error != 0) {
-    set_duty(10);
+  if (motor_instruction_running) {
+    update_pid();
   }
-
 }
 
 ISR(PCINT0_vect) {
@@ -308,20 +325,22 @@ ISR(PCINT0_vect) {
   // order to count the 48 ticks per revolution of the drive shaft.
   //
 
-  encoder_frequency++;
+  encoder_frequency++;  // For testing purposes only
 
-  static uint8_t encoder_a = 0;
-  static uint8_t encoder_b = 0;
+  if (motor_instruction_running) {
+    static uint8_t encoder_a = 0;
+    static uint8_t encoder_b = 0;
 
-  uint8_t tmp_encoder_a = (PINB & _BV(PB4)) ? 1 : 0;
-  uint8_t tmp_encoder_b = (PINB & _BV(PB5)) ? 1 : 0;
+    uint8_t tmp_encoder_a = (PINB & _BV(PB4)) ? 1 : 0;
+    uint8_t tmp_encoder_b = (PINB & _BV(PB5)) ? 1 : 0;
 
-  if (tmp_encoder_a ^ encoder_b) {
-    encoder++;
-  } else if (tmp_encoder_b ^ encoder_a) {
-    encoder--;
+    if (tmp_encoder_a ^ encoder_b) {
+      encoder++;
+    } else if (tmp_encoder_b ^ encoder_a) {
+      encoder--;
+    }
+
+    encoder_a = tmp_encoder_a;
+    encoder_b = tmp_encoder_b;
   }
-
-  encoder_a = tmp_encoder_a;
-  encoder_b = tmp_encoder_b;
 }
