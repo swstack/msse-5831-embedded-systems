@@ -8,6 +8,14 @@
 #define DUTY_MAX 30000
 #define ENCODER_FULL_ROTATION 2249
 
+#define INSTRUCTION_TYPE_DELAY 11
+#define INSTRUCTION_TYPE_MOTOR 12
+
+typedef struct {
+    int type;
+    int data;
+} instruction_t;
+
 /************************************************
   Globals
 *************************************************/
@@ -102,50 +110,12 @@ void init() {
 /************************************************
   Main
 *************************************************/
-
-void handle_instruction(int index, int instruction_data) {
-  // If the index is an even number, the instruction is a motor setpoint. If
-  // the index is odd, the instruction is a delay.
-
-  if (index % 2 == 0) {
-    // Handle Motor Instruction
-
-    if (motor_instruction_running == false) {
-      printf("Starting new Motor Instruction (%d)...\r\n", index);
-
-      motor_instruction_running = true;
-      setpoint = instruction_data;
-      encoder = 0;
-
-      if (setpoint > 0) {
-        printf("New direction: Forward\r\n");
-        forward();
-      } else {
-        printf("New direction: Reverse\r\n");
-        reverse();
-      }
-
-      printf("New setpoint: %ld, Current Error: %ld\r\n", setpoint, error);
-    } else {
-
-      if (error == 0) {
-        printf("Motor Instruction (%d) complete!\r\n", index);
-
-        setpoint = 0;
-        motor_instruction_running = false;
-        current_instruction++;
-      }
-
-    }
-
-  } else {
-    // Handle Delay Instruction
-
-    if (delay_instruction_running == false) {
+void handle_delay(int index, int target_delay) {
+  if (delay_instruction_running == false) {
       printf("Starting new Delay Instruction (%d)...\r\n", index);
 
       delay_instruction_running = true;
-      delay_uptime = uptime_ms + instruction_data;
+      delay_uptime = uptime_ms + target_delay;
 
     } else {
       int diff = delay_uptime - uptime_ms;
@@ -156,25 +126,79 @@ void handle_instruction(int index, int instruction_data) {
         current_instruction++;
       }
     }
+}
+
+
+void handle_motor(int index, int target_setpoint) {
+  if (motor_instruction_running == false) {
+    printf("Starting new Motor Instruction (%d)...\r\n", index);
+
+    motor_instruction_running = true;
+    setpoint = target_setpoint;
+    encoder = 0;
+
+    if (setpoint > 0) {
+      printf("New direction: Forward\r\n");
+      forward();
+    } else {
+      printf("New direction: Reverse\r\n");
+      reverse();
+    }
+
+    printf("New setpoint: %ld, Current Error: %ld\r\n", setpoint, error);
+  } else {
+
+    if (error == 0) {
+      printf("Motor Instruction (%d) complete!\r\n", index);
+
+      setpoint = 0;
+      motor_instruction_running = false;
+      current_instruction++;
+    }
 
   }
 }
 
-int* interpolator() {
-  // Return a set of instructions for the main loop to execute
+void handle_instruction(int index, instruction_t instruction) {
+  // If the index is an even number, the instruction is a motor setpoint. If
+  // the index is odd, the instruction is a delay.
+
+  switch(instruction.type) {
+
+    case INSTRUCTION_TYPE_MOTOR :
+      handle_motor(index, instruction.data);
+      break;
+
+    case INSTRUCTION_TYPE_DELAY :
+      handle_delay(index, instruction.data);
+      break;
+
+    default :
+      printf("Unknown instruction type: %d", instruction.type);
+      break;
+  }
+
+}
+
+void make_instruction(instruction_t *in, int instruction_type, int instruction_data) {
+  in->type = instruction_type;
+  in->data = instruction_data;
+}
+
+void interpolator(instruction_t *instructions) {
+  // Fill the instructions array with instructions
   //
-  // Instructions are in the form of an array where each element in the array
-  // is an integer. Elements with an even index are motor setpoints and elements
-  // with an odd index are delays in milliseconds.
+  // Instructions are defined as type instruction_t with a "type" and "data".
+  // There are currently only two types of instructions, "delay" and "motor".
+  // A delay instruction contains the delay data in the form of milliseconds
+  // and motor instuctions contain a positive or negative setpoint.
   //
 
-  static int instructions[] = {0, 0, 0, 0, 0};
-  instructions[0] = setpoint_for_degrees(90);            // Forward 90
-  instructions[1] = 500;                                 // Delay 500ms
-  instructions[2] = 0 - setpoint_for_degrees(360);       // Reverse 360
-  instructions[3] = 500;                                 // Delay 500ms
-  instructions[4] = setpoint_for_degrees(5);
-  return instructions;
+  make_instruction(&instructions[0], INSTRUCTION_TYPE_MOTOR, setpoint_for_degrees(90));
+  make_instruction(&instructions[1], INSTRUCTION_TYPE_DELAY, 500);
+  make_instruction(&instructions[2], INSTRUCTION_TYPE_MOTOR, 0 - setpoint_for_degrees(360));
+  make_instruction(&instructions[3], INSTRUCTION_TYPE_DELAY, 500);
+  make_instruction(&instructions[4], INSTRUCTION_TYPE_MOTOR, setpoint_for_degrees(5));
 }
 
 int main() {
@@ -185,8 +209,8 @@ int main() {
   init();
   flash_on_board_leds();
 
-  int *instructions;
-  instructions = interpolator();
+  instruction_t instructions[5];
+  interpolator(instructions);
 
   while (1) {
 
