@@ -23,7 +23,7 @@ typedef struct {
 
 // Debugging/testing stuff
 uint32_t encoder_frequency = 0;
-
+bool logs_human_readable = false;
 
 // Motor state
 int32_t encoder = 0;
@@ -159,10 +159,15 @@ int setpoint_for_degrees(int total_degrees) {
 void log_pid_values() {
 
   // Log every 200 milliseconds
-  if (log_timer >= 50) {
+  if (log_timer >= 20) {
     log_timer = 0;
 
-    printf("[%lu] Setpoint: %ld, Error: %ld, Torque: %lu\r\n", uptime_ms, setpoint, error, torque);
+    if (logs_human_readable == true) {
+        printf("[%lu] Setpoint: %ld, Error: %ld, Encoder: %ld, Torque: %lu\r\n", uptime_ms, setpoint, error, encoder, torque);
+    } else {
+      printf("%lu,%ld,%ld\r\n", uptime_ms, setpoint, encoder);
+    }
+
   }
 }
 
@@ -279,7 +284,7 @@ void handle_motor(int target_setpoint) {
     // encoder = 0;
     setpoint += target_setpoint;
     error = setpoint - encoder;
-    printf("Starting new Motor Instruction...\r\n");
+    printf("Starting new Motor Instruction (Setpoint: %ld)...\r\n", setpoint);
 
     // Start the motor!
     motor_instruction_running = true;
