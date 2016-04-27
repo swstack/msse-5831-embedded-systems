@@ -50,6 +50,7 @@ Pick a “low,” “high,” and “ideal” gain based on above experiments. U
 | Low   | 10  | 2   |
 | Ideal | 60  | 30  |
 | High  | 200 | 100 |
+| Extreme  | 1200 | 600 |
 
 **Results: Two full rotations**
 
@@ -57,7 +58,7 @@ Pick a “low,” “high,” and “ideal” gain based on above experiments. U
 
 **Results: 5 degree setpoint**
 
-* Suprisingly, i could not tell a difference between any of the gains settings for this experiement! Even with the high gains I witness no oscillation.
+* Surprisingly, i could not tell a difference between any of the gains settings for this experiment! Even with the high gains I witness no oscillation.
 
 Now run the same experiments, except slow your controller task frequency to 2 Hz (or 5 Hz if this is too disruptive).
 
@@ -82,3 +83,21 @@ Be sure to graph the entire trajectory. “While” means to record while execut
 Execute the same trajectory described above, except run your PD controller at a "slow" rate and at a "very slow" rate while graphing the same variables. Discuss the results.
 
 Explain the observed behavior.
+
+## Ideal Gains
+
+With the Ideal gains settings of (Kp=60, Kd=30). You can see in the graph below there was no oscillation and the setpoint is reached quite quickly.
+
+![](https://raw.githubusercontent.com/swstack/msse-5831-embedded-systems/master/lab2/assets/ideal.png)
+
+## Low Gains
+
+With low gains, you can see that the setpoint is reached much more gradually and slower, therefore there are more data points.
+
+![](https://raw.githubusercontent.com/swstack/msse-5831-embedded-systems/master/lab2/assets/low.png)
+
+## Extreme Gains
+
+To really visualize the oscillation, I used some extreme gains settings of (Kp=1200, Kd=600). The results were pretty cool.
+
+![](https://raw.githubusercontent.com/swstack/msse-5831-embedded-systems/master/lab2/assets/high.png)
