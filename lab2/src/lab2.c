@@ -38,8 +38,8 @@ uint32_t torque = 0;
 int ocr_value;
 
 // Gains
-int kp_high = 200;
-int kd_high = 100;
+int kp_high = 1200;
+int kd_high = 600;
 
 int kp_ideal = 60;
 int kd_ideal = 30;
