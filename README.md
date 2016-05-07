@@ -2,18 +2,18 @@
 
 Class assignments for SENG-5831 (Embedded Systems) at the University of Minnesota.
 
-# Pins
+# Lab 1
 
-Button A
-  Pin = PB3
-  Interrupt = PCINT3
+Counters, Timers and Scheduling.
 
-Button B
-  Pin = PD5
+[Code and README.](lab1/)
 
-Button C
-  Pin = PB0
-  Interrupt = PCINT0
+
+# Lab 2
+
+PID Motor Controller.
+
+[Code and README.](lab2/)
 
 # HW 1
 
