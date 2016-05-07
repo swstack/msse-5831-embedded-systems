@@ -2,22 +2,16 @@
 
 Class assignments for SENG-5831 (Embedded Systems) at the University of Minnesota.
 
-# Lab 1
-
-Counters, Timers and Scheduling.
+# Lab 1: Counters, Timers and Scheduling
 
 [Code and README.](lab1/)
 
 
-# Lab 2
-
-PID Motor Controller.
+# Lab 2: PID Motor Controller
 
 [Code and README.](lab2/)
 
-# HW 1
-
-Push buttons to modify LED functionality.
+# HW 1: Push buttons to modify LED functionality
 
 __Button A Requirements:__
 
@@ -31,9 +25,7 @@ __Button C Requirements:__
 * When Button C is pushed twice, blink yellow LED at 2 Hz (every 1250ms)
 * When Button C is pushed a third time, turn the yellow LED off.
 
-# HW 2
-
-Intro to ISRs.
+# HW 2: Intro to ISRs
 
 * Blink the Green on-board LED () using the main loop at a rate of .5 Hz.
 
@@ -41,7 +33,7 @@ Intro to ISRs.
 
 * Create rudimentary menu that changes which color is blinking (or port) at 4 Hz. Currently there is no terminal-based UI capability, thus you can use button presses as a means to change LEDs (I will leave it as your choice to change what you like - color, frequency, or maybe an interesting pattern of blinking LEDs.)
 
-# HW 3
+# HW 3: Periodic Tasks
 
 Create a single program that contains the following periodic tasks:
 
